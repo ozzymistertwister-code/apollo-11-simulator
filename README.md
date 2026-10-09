@@ -24,4 +24,6 @@ Terrain, obstacles, safe pads, surface grades, and remaining simplifications are
 
 Engineering Mode also provides optional `LANDING ASSIST` markers, terrain slope/zone/drift telemetry, and a `PREDICTED TOUCHDOWN` estimate assuming current throttle and attitude are held. The estimate is read-only and reports `UNAVAILABLE` outside the modeled envelope.
 
+The `FLIGHT HISTORY // REPLAY & ANALYTICS` panel opens completed local records without interrupting an active mission. Replay uses recorded coordinates and attitude with 0.5×–4× playback, a touch-friendly timeline, event markers, seven selectable telemetry graphs, derived landing metrics, and two-flight comparison warnings for different initial conditions.
+
 Select one of the five seeded scenarios before launch. Restart repeats the selected scenario. The Mission Report includes Flight Performance, Landing Site Assessment, and Mission Result sections, including a precision grade that does not reward an unsafe site. See [TERRAIN.md](TERRAIN.md) for the generation and coordinate model.

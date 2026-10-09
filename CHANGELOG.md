@@ -8,6 +8,13 @@
 - Added full JSON and telemetry CSV export from the recorder panel.
 - Added seven recorder tests covering timing, event grouping, finite data, export, retention, physics isolation, and IndexedDB fallback.
 
+## v1.4.0 — local Part 2 checkpoint — 2026-10-09
+
+- Added Flight History with replay, touch-friendly timeline seeking, event markers, pause/resume, and variable playback speed.
+- Added telemetry charts with selectable signals and derived mission analytics.
+- Added two-flight comparison with compatibility warnings and isolated deletion of saved records.
+- Added replay, analytics, and storage deletion tests. Final release and production deployment remain deferred.
+
 ## v1.3.1 — 2026-10-09
 
 - Increased explicit gameplay-scale terrain relief so hills, depressions, and slopes remain legible on mobile screens.

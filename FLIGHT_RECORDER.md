@@ -23,3 +23,5 @@ All numeric values are sanitized to finite numbers before entering a record. Hel
 The recorder panel restores the newest stored completed record after a reload and exports the current/latest completed record as pretty-printed JSON or CSV. JSON contains all metadata, telemetry, events, and Mission Report fields. CSV contains telemetry only and names SI units in its headers (`_s`, `_m`, `_m_s`, `_m_s2`, `_kg`, `_kN`, and `_deg`).
 
 This is a simulator record, not an Apollo mission data interchange format. Sampling is 10 Hz and the model remains the existing 2D, fixed-step gameplay model.
+
+Completed records are also consumed by the v1.4 Replay and Analytics panel. Replay interpolates stored telemetry for the selected timeline time and never calls the physics engine. Analytics derives metrics such as descent rate, braking start, thrust, fuel use, engine time, dangerous-descent time, horizontal displacement, and touchdown values directly from the samples; unavailable values are shown as `N/A`.

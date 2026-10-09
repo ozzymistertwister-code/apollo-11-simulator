@@ -20,6 +20,13 @@
 - Added grouped pilot/system event logging, completion-only persistence, IndexedDB retention of 20 records, and JSON/CSV export.
 - Remaining v1.4 work: recorder history UI improvements, broader browser-device QA, and final release validation.
 
+## v1.4.0 Part 2 — local checkpoint
+
+- Added stored-flight history with replay, pause/resume, timeline seeking, event markers, and 0.5×/1×/2×/4× playback.
+- Added selectable altitude, velocity, thrust, fuel, attitude, and acceleration charts plus telemetry-derived landing analytics.
+- Added two-flight comparison with same-condition detection, mismatch warning, and isolated record deletion.
+- Remaining v1.4 work: final mobile/browser QA, release validation, and publication.
+
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.
 - **v0.4** — DSKY interface, verb/noun entry, alarms, and guidance-computer telemetry.
