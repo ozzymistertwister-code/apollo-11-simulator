@@ -24,6 +24,9 @@
  .fuel-bar { grid-column: 1 / -1; height: 7px; background: #25343a; border: 1px solid #3a4c52; }
  .fuel-bar i { display: block; height: 100%; width: 0; background: #f4a900; transition: width .2s ease-out; }
  @media (max-width: 420px) { .fuel-report { gap: 9px 12px; font-size: 9px; } }
+.surface-report { display: grid; grid-template-columns: 1.3fr 1fr; gap: 9px 16px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #34474d; font: 10px 'IBM Plex Mono', monospace; }
+.surface-report span { color: #83949b; letter-spacing: .07em; }
+.surface-report b { color: #68c5b1; font-weight: 500; }
 .mode-picker { display: grid; gap: 8px; margin-top: 20px; color: #83949b; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; }
 .mode-picker select { width: 100%; padding: 11px; border: 1px solid #52666c; background: #0b1117; color: #e9eeea; font: 12px 'IBM Plex Mono', monospace; }
 @media (max-width: 720px) { .modal { align-items: start; overflow-y: auto; } .modal-card { margin: 8vh 0; } }

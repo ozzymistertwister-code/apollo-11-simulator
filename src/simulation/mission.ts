@@ -1,5 +1,7 @@
 import { ENGINEERING_PHYSICS, PHYSICS, type FlightMode, type PhysicsConfig } from '../config/physics';
 import { assessLanding, captureFuelTelemetry, captureTouchdown, initialCraft, resolveTerrainContact, stepPhysics } from '../physics/engine';
+import { detectLandingContact, resolveLandingGearContact } from '../physics/landing-gear';
+import { LunarTerrain, type TerrainDifficulty } from '../terrain/lunar-terrain';
 import type { CraftState, FuelTelemetry, LandingAssessment, LandingOutcome, TouchdownTelemetry } from '../physics/types';
 
 export type MissionStatus = 'ready' | 'active' | 'paused' | 'complete';
@@ -7,9 +9,11 @@ export type MissionState = { craft: CraftState; time: number; status: MissionSta
 
 export class Mission {
   state: MissionState;
+  readonly terrain?: LunarTerrain;
   private accumulator = 0;
 
-  constructor(public readonly mode: FlightMode = 'classic') {
+  constructor(public readonly mode: FlightMode = 'classic', difficulty: TerrainDifficulty = 'normal', seed = 1101) {
+    this.terrain = mode === 'engineering' ? new LunarTerrain(seed, difficulty) : undefined;
     this.state = { craft: initialCraft(this.config), time: 0, status: 'ready', mode };
   }
 
@@ -24,17 +28,20 @@ export class Mission {
   tick(frameDelta: number) {
     if (this.state.status !== 'active') return;
     this.accumulator += Math.min(frameDelta, 0.25);
-    while (this.accumulator >= PHYSICS.fixedStep) {
+    while (this.accumulator >= this.config.fixedStep) {
       const before = this.state.craft;
       const beforeTime = this.state.time;
       const next = stepPhysics(before, this.config.fixedStep, this.config);
       this.state.craft = next;
       this.state.time += PHYSICS.fixedStep;
       this.accumulator -= PHYSICS.fixedStep;
-      if (this.state.craft.position.y <= this.config.terrainBase) {
-        this.state.touchdown = captureTouchdown(before, next, beforeTime, this.config.fixedStep, this.config.terrainBase);
+      const contact = this.terrain ? detectLandingContact(next, this.terrain) : undefined;
+      if (contact?.contact || (!this.terrain && this.state.craft.position.y <= this.config.terrainBase)) {
+        const terrainHeight: number = contact ? this.terrain!.heightAt(next.position.x) : this.config.terrainBase;
+        const contactCenterHeight: number = contact ? next.position.y - contact.penetration : terrainHeight;
+        this.state.touchdown = captureTouchdown(before, next, beforeTime, this.config.fixedStep, terrainHeight, contact ? { terrainHeight, slope: contact.slope, supportContacts: contact.supportContacts, obstacleContact: contact.obstacleContact, hullContact: contact.hullContact, result: contact.result } : undefined, contactCenterHeight);
         this.state.assessment = assessLanding(this.state.touchdown, this.config);
-        this.state.craft = resolveTerrainContact(this.state.craft, this.config.terrainBase);
+        this.state.craft = contact ? resolveLandingGearContact(this.state.craft, contact) : resolveTerrainContact(this.state.craft, this.config.terrainBase);
         this.state.outcome = this.state.assessment.outcome;
         this.state.fuelTelemetry = captureFuelTelemetry(this.state.initialFuel ?? this.config.initialFuel, this.state.touchdown.fuel, this.state.assessment.outcome === 'success', this.mode);
         this.state.status = 'complete';

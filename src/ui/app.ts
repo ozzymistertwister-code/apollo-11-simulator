@@ -83,6 +83,9 @@ const updateFuelReport = () => {
 };
 window.setInterval(updateFuelReport, 100);
 const footerVersion = document.querySelector<HTMLElement>('.footer span:nth-child(2)');
-if (footerVersion) footerVersion.textContent = 'SIMULATION 1.2.0 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
+if (footerVersion) footerVersion.textContent = 'SIMULATION 1.3.0 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
 const keyboardStep = bindControls(() => mission, () => mission.pause(), () => reset());
 window.setInterval(keyboardStep, 1000 / 60);
+window.setInterval(() => renderer.setTerrain(mission.terrain), 100);
+reportCard?.insertAdjacentHTML('beforeend', '<div class="surface-report"><span>LANDING RESULT</span><b id="landing-result">—</b><span>SURFACE SLOPE</span><b id="landing-slope">—</b><span>SUPPORT CONTACTS</span><b id="landing-supports">—</b></div>');
+window.setInterval(() => { const touchdown = mission.state.touchdown; const assessment = mission.state.assessment; if (!touchdown || !assessment) return; $('landing-result').textContent = assessment.result; $('landing-slope').textContent = `${(Math.abs(assessment.slope) * 180 / Math.PI).toFixed(1)}°`; $('landing-supports').textContent = `${assessment.supportContacts}/2`; }, 100);

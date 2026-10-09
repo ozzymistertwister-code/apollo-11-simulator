@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0 — local Part 1 checkpoint
+
+- Added deterministic seeded lunar terrain with Easy, Normal, and Hard profiles.
+- Added shared terrain height, slope, normal, obstacle, and safe-pad queries for physics and Canvas rendering.
+- Added two-point landing-gear contact, hull/obstacle collision, terrain-aware landing outcomes, and surface telemetry.
+- Expanded physics coverage to 29 tests. Publication is intentionally deferred to Part 2/3.
+
 ## v1.2.0 — 2026-10-09
 
 - Added Classic and Engineering flight profiles.

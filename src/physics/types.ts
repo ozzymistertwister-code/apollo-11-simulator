@@ -11,6 +11,7 @@ export type CraftState = {
 };
 
 export type LandingOutcome = 'success' | 'hard' | 'crash';
+export type LandingResult = 'SAFE LANDING' | 'HARD LANDING' | 'UNSTABLE LANDING' | 'TIP-OVER' | 'CRASH';
 
 export type TouchdownGrade = 'A+' | 'A' | 'B' | 'C' | 'F';
 export type ModuleCondition = 'Intact' | 'Minor Damage' | 'Major Damage' | 'Destroyed';
@@ -24,6 +25,12 @@ export type TouchdownTelemetry = Readonly<{
   mass: number;
   flightTime: number;
   position: Vector;
+  terrainHeight?: number;
+  slope?: number;
+  supportContacts?: number;
+  obstacleContact?: boolean;
+  hullContact?: boolean;
+  result?: LandingResult;
 }>;
 
 export type LandingAssessment = Readonly<{
@@ -31,6 +38,11 @@ export type LandingAssessment = Readonly<{
   safetyGrade: TouchdownGrade;
   condition: ModuleCondition;
   outcome: LandingOutcome;
+  result: LandingResult;
+  slope: number;
+  supportContacts: number;
+  obstacleContact: boolean;
+  stable: boolean;
   summary: string;
 }>;
 

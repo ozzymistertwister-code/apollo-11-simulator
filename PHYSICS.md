@@ -1,6 +1,6 @@
 # Physics model
 
-Apollo 11 Simulator v1.2.0 is a deterministic 2D terminal-descent game. It is not a reconstruction of the Apollo 11 trajectory, AGC, guidance software, or spacecraft systems.
+Apollo 11 Simulator v1.3.0 is a deterministic 2D terminal-descent game. It is not a reconstruction of the Apollo 11 trajectory, AGC, guidance software, or spacecraft systems.
 
 ## Equations and integration
 
@@ -25,6 +25,14 @@ Classic retains the established playable values: lunar gravity `1.62 m/s²`, dry
 Engineering uses a `44,482 N` maximum descent-engine thrust, a `10–60%` commanded throttle range, and `730 kg` nominal terminal-descent propellant budget. These values are drawn from the sources below. Dry mass, initial altitude, burn rate, attitude response, touchdown thresholds, and the simplified 2D force model remain explicitly labelled simulator assumptions; they are not presented as complete LM specifications.
 
 Fuel efficiency is calculated from the launch snapshot: `fuelUsed = initialFuel − remainingFuel`. It is graded only after a safe (`success`) landing, so saving fuel cannot turn a destroyed or critical vehicle into a good result.
+
+## Lunar terrain and landing gear
+
+Engineering Mode generates `LunarTerrain(seed, difficulty)` from a deterministic integer PRNG. The generator combines interpolated low-frequency height noise, crater bowls/rims, rocks, and one flattened safe pad. Easy uses a wide 54 m pad, Normal a 34 m pad, and Hard a 22 m pad; the pad is deliberately guaranteed to be clear and within the starting scenario. Heights are piecewise-linear between 4 m samples, so `heightAt(x)` is continuous. `slopeAt(x)` uses a centred finite difference and `normalAt(x)` returns the normalized `(-slope, 1)` vector. Physics and Canvas rendering query this same terrain instance.
+
+The real LM had four landing legs; this 2D model uses two effective points at local coordinates `(-2.4 m, -2.4 m)` and `(2.4 m, -2.4 m)` relative to the craft reference point. Contact is detected per support after rotation, with separate simplified hull points and obstacle checks. A fixed-step contact resolves penetration by lifting the craft vertically and zeroing vertical velocity only after touchdown telemetry is captured.
+
+Surface thresholds are simulator rules, not NASA limits: stable slope is ≤ `0.14 rad` (~8°), tip-over slope is > `0.36 rad` (~20.6°), and stable relative craft/surface angle is ≤12°. Two supports, no hull/rock contact, and stable slope produce `SAFE LANDING`; velocity/angle limits then distinguish soft from hard touchdown. Steep or single-support contact produces `UNSTABLE LANDING` or `TIP-OVER`; hull/obstacle contact produces `CRASH`.
 
 ## Sources and limits
 

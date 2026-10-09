@@ -18,4 +18,4 @@ npm test
 npm run build
 ```
 
-Version `1.2.0` provides Classic and Engineering profiles. Engineering uses documented LM descent-engine limits where available; remaining simplifications are marked in [PHYSICS.md](PHYSICS.md). Mission Report preserves interpolated touchdown telemetry and reports separate landing safety and fuel-efficiency grades. See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [CHANGELOG.md](CHANGELOG.md).
+Version `1.3.0` adds deterministic lunar terrain and two-point landing-gear contact in Engineering Mode while preserving the flat-ground Classic profile. Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md). Publication is deferred until the remaining v1.3 work is complete.

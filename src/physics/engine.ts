@@ -1,4 +1,5 @@
 import { PHYSICS, type PhysicsConfig } from '../config/physics';
+import { LANDING_GEAR } from './landing-gear';
 import type { CraftState, FuelEfficiencyGrade, FuelTelemetry, LandingAssessment, LandingOutcome, TouchdownTelemetry, Vector } from './types';
 
 export const initialCraft = (config: PhysicsConfig = PHYSICS): CraftState => ({
@@ -43,9 +44,9 @@ export function classifyLanding(craft: CraftState, config: PhysicsConfig = PHYSI
   return 'crash';
 }
 
-export function captureTouchdown(before: CraftState, after: CraftState, beforeTime: number, dt: number, terrainHeight = PHYSICS.terrainBase): TouchdownTelemetry {
+export function captureTouchdown(before: CraftState, after: CraftState, beforeTime: number, dt: number, terrainHeight: number = PHYSICS.terrainBase, surface: Partial<Pick<TouchdownTelemetry, 'terrainHeight' | 'slope' | 'supportContacts' | 'obstacleContact' | 'hullContact' | 'result'>> = {}, contactCenterHeight: number = terrainHeight): TouchdownTelemetry {
   const travel = before.position.y - after.position.y;
-  const alpha = travel > 0 ? Math.min(1, Math.max(0, (before.position.y - terrainHeight) / travel)) : 1;
+  const alpha = travel > 0 ? Math.min(1, Math.max(0, (before.position.y - contactCenterHeight) / travel)) : 1;
   const lerp = (a: number, b: number) => a + (b - a) * alpha;
   const velocity = { x: lerp(before.velocity.x, after.velocity.x), y: lerp(before.velocity.y, after.velocity.y) };
   return Object.freeze({
@@ -56,7 +57,13 @@ export function captureTouchdown(before: CraftState, after: CraftState, beforeTi
     fuel: lerp(before.fuel, after.fuel),
     mass: configMass(before, after, alpha),
     flightTime: beforeTime + dt * alpha,
-    position: Object.freeze({ x: lerp(before.position.x, after.position.x), y: terrainHeight })
+    position: Object.freeze({ x: lerp(before.position.x, after.position.x), y: terrainHeight }),
+    terrainHeight: surface.terrainHeight ?? terrainHeight,
+    slope: surface.slope ?? 0,
+    supportContacts: surface.supportContacts ?? 2,
+    obstacleContact: surface.obstacleContact ?? false,
+    hullContact: surface.hullContact ?? false,
+    result: surface.result ?? 'SAFE LANDING'
   });
 }
 
@@ -68,19 +75,26 @@ export function assessLanding(telemetry: TouchdownTelemetry, config: PhysicsConf
   const vertical = Math.abs(telemetry.verticalSpeed);
   const horizontal = Math.abs(telemetry.horizontalSpeed);
   const tilt = Math.abs(telemetry.angle);
+  const base = { slope: telemetry.slope ?? 0, supportContacts: telemetry.supportContacts ?? 2, obstacleContact: telemetry.obstacleContact ?? false };
+  const slopeMagnitude = Math.abs(telemetry.slope ?? 0);
+  const geometryResult = slopeMagnitude > LANDING_GEAR.maxTipSlope ? 'TIP-OVER' : slopeMagnitude > LANDING_GEAR.maxStableSlope || (telemetry.supportContacts ?? 2) < 2 ? 'UNSTABLE LANDING' : 'SAFE LANDING';
+  const surfaceResult = telemetry.result && telemetry.result !== 'SAFE LANDING' ? telemetry.result : geometryResult;
+  if (surfaceResult === 'CRASH' || base.obstacleContact || telemetry.hullContact) return { grade: 'F', safetyGrade: 'F', condition: 'Destroyed', outcome: 'crash', result: 'CRASH', stable: false, ...base, summary: 'Crash. The landing gear or hull struck terrain or an obstacle.' };
+  if (surfaceResult === 'TIP-OVER') return { grade: 'C', safetyGrade: 'C', condition: 'Major Damage', outcome: 'crash', result: 'TIP-OVER', stable: false, ...base, summary: 'Tip-over. The landing geometry could not support the module on this terrain.' };
+  if (surfaceResult === 'UNSTABLE LANDING') return { grade: 'B', safetyGrade: 'B', condition: 'Major Damage', outcome: 'crash', result: 'UNSTABLE LANDING', stable: false, ...base, summary: 'Unstable landing. The surface slope or support geometry exceeded the stable envelope.' };
   if (vertical <= config.excellentVerticalSpeed && horizontal <= config.excellentHorizontalSpeed && tilt <= config.excellentTilt) {
-    return { grade: 'A+', safetyGrade: 'A+', condition: 'Intact', outcome: 'success', summary: 'Excellent touchdown. Guidance reports a very soft, stable landing.' };
+    return { grade: 'A+', safetyGrade: 'A+', condition: 'Intact', outcome: 'success', result: 'SAFE LANDING', stable: true, ...base, summary: 'Excellent touchdown. Guidance reports a very soft, stable landing.' };
   }
   if (vertical <= config.softVerticalSpeed && horizontal <= config.softHorizontalSpeed && tilt <= config.hardTilt) {
-    return { grade: 'A', safetyGrade: 'A', condition: 'Intact', outcome: 'success', summary: 'Safe touchdown. The module is stable within the playable landing envelope.' };
+    return { grade: 'A', safetyGrade: 'A', condition: 'Intact', outcome: 'success', result: 'SAFE LANDING', stable: true, ...base, summary: 'Safe touchdown. The module is stable within the playable landing envelope.' };
   }
   if (vertical <= config.hardVerticalSpeed && horizontal <= config.hardHorizontalSpeed && tilt <= config.hardTilt) {
-    return { grade: 'B', safetyGrade: 'B', condition: 'Minor Damage', outcome: 'hard', summary: 'Hard touchdown. The module landed, but the landing gear may be damaged.' };
+    return { grade: 'B', safetyGrade: 'B', condition: 'Minor Damage', outcome: 'hard', result: 'HARD LANDING', stable: false, ...base, summary: 'Hard touchdown. The module landed, but the landing gear may be damaged.' };
   }
   if (vertical <= config.criticalVerticalSpeed && horizontal <= config.criticalHorizontalSpeed && tilt <= config.criticalTilt) {
-    return { grade: 'C', safetyGrade: 'C', condition: 'Major Damage', outcome: 'crash', summary: 'Critical touchdown. The module reached the surface with serious damage.' };
+    return { grade: 'C', safetyGrade: 'C', condition: 'Major Damage', outcome: 'crash', result: 'CRASH', stable: false, ...base, summary: 'Critical touchdown. The module reached the surface with serious damage.' };
   }
-  return { grade: 'F', safetyGrade: 'F', condition: 'Destroyed', outcome: 'crash', summary: 'Crash. The landing exceeded the playable survival envelope.' };
+  return { grade: 'F', safetyGrade: 'F', condition: 'Destroyed', outcome: 'crash', result: 'CRASH', stable: false, ...base, summary: 'Crash. The landing exceeded the playable survival envelope.' };
 }
 
 export function fuelEfficiencyGrade(fuelUsedPercent: number, safeLanding: boolean): FuelEfficiencyGrade {
