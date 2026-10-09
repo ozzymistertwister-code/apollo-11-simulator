@@ -1,6 +1,7 @@
 export type TerrainDifficulty = 'easy' | 'normal' | 'hard';
 
 export type TerrainObstacle = Readonly<{ x: number; y: number; radius: number }>;
+export type TerrainCrater = Readonly<{ x: number; radius: number; depth: number }>;
 export type LandingPad = Readonly<{ start: number; end: number; center: number; width: number }>;
 
 export type TerrainProfile = Readonly<{
@@ -12,6 +13,7 @@ export type TerrainProfile = Readonly<{
   maxSafeSlope: number;
   points: ReadonlyArray<Readonly<{ x: number; y: number }>>;
   obstacles: ReadonlyArray<TerrainObstacle>;
+  craters: ReadonlyArray<TerrainCrater>;
   safePads: ReadonlyArray<LandingPad>;
 }>;
 
@@ -129,7 +131,7 @@ function generateTerrain(seed: number, difficulty: TerrainDifficulty): TerrainPr
     const radius = lerp(0.7, difficulty === 'hard' ? 2.8 : 1.8, random());
     obstacles.push({ x, y: interpolate(points, x) + radius * 0.65, radius });
   }
-  return { seed, difficulty, minX, maxX, sampleSpacing, maxSafeSlope: settings.safeSlope, points, obstacles, safePads: [safePad] };
+  return { seed, difficulty, minX, maxX, sampleSpacing, maxSafeSlope: settings.safeSlope, points, obstacles, craters, safePads: [safePad] };
 }
 
 function interpolate(points: ReadonlyArray<{ x: number; y: number }>, x: number): number {

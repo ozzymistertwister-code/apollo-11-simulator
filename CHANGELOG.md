@@ -6,6 +6,8 @@
 - Added shared terrain height, slope, normal, obstacle, and safe-pad queries for physics and Canvas rendering.
 - Added two-point landing-gear contact, hull/obstacle collision, terrain-aware landing outcomes, and surface telemetry.
 - Expanded physics coverage to 29 tests. Publication is intentionally deferred to Part 2/3.
+- Added precision landing guidance, safe-zone assist markers, predicted touchdown, adaptive camera zoom/tracking, and compact terrain telemetry.
+- Added five guidance/camera tests; publication remains deferred until Part 3.
 
 ## v1.2.0 — 2026-10-09
 

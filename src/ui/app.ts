@@ -1,5 +1,7 @@
 import { Mission } from '../simulation/mission';
 import type { FlightMode } from '../config/physics';
+import { assessLandingZone, targetOffset } from '../simulation/landing-guidance';
+import { predictTouchdown } from '../simulation/touchdown-prediction';
 import { bindControls } from '../controls/controls';
 import { Renderer } from '../rendering/renderer';
 import { bindTouchControl, type TouchAction } from '../controls/touch';
@@ -89,3 +91,30 @@ window.setInterval(keyboardStep, 1000 / 60);
 window.setInterval(() => renderer.setTerrain(mission.terrain), 100);
 reportCard?.insertAdjacentHTML('beforeend', '<div class="surface-report"><span>LANDING RESULT</span><b id="landing-result">—</b><span>SURFACE SLOPE</span><b id="landing-slope">—</b><span>SUPPORT CONTACTS</span><b id="landing-supports">—</b></div>');
 window.setInterval(() => { const touchdown = mission.state.touchdown; const assessment = mission.state.assessment; if (!touchdown || !assessment) return; $('landing-result').textContent = assessment.result; $('landing-slope').textContent = `${(Math.abs(assessment.slope) * 180 / Math.PI).toFixed(1)}°`; $('landing-supports').textContent = `${assessment.supportContacts}/2`; }, 100);
+
+let landingAssistEnabled = true;
+const guidanceDetails = document.createElement('details');
+guidanceDetails.className = 'guidance-details';
+guidanceDetails.open = true;
+guidanceDetails.innerHTML = '<summary>PRECISION LANDING</summary><div class="guidance-grid"><button type="button" id="landing-assist">LANDING ASSIST: ON</button><span>TERRAIN SLOPE <b id="terrain-slope">—</b></span><span>LANDING ZONE <b id="landing-zone">—</b></span><span>HORIZONTAL DRIFT <b id="horizontal-drift">—</b></span><span>TARGET OFFSET <b id="target-offset">—</b></span><span class="prediction-wide">PREDICTED TOUCHDOWN <b id="predicted-touchdown">UNAVAILABLE</b></span><small id="prediction-assumption"></small></div>';
+document.querySelector('.telemetry')?.append(guidanceDetails);
+const landingAssistButton = guidanceDetails.querySelector<HTMLButtonElement>('#landing-assist');
+landingAssistButton?.addEventListener('click', () => { landingAssistEnabled = !landingAssistEnabled; landingAssistButton.textContent = `LANDING ASSIST: ${landingAssistEnabled ? 'ON' : 'OFF'}`; });
+const updatePrecisionGuidance = () => {
+  const terrain = mission.terrain;
+  renderer.setTerrain(terrain);
+  renderer.setLandingAssist(landingAssistEnabled);
+  if (!terrain) { renderer.setPrediction({ available: false, reason: 'UNAVAILABLE' }); $('terrain-slope').textContent = 'N/A'; $('landing-zone').textContent = 'N/A'; $('horizontal-drift').textContent = `${mission.state.craft.velocity.x >= 0 ? '+' : '−'}${Math.abs(mission.state.craft.velocity.x).toFixed(1)} m/s`; $('target-offset').textContent = 'N/A'; $('predicted-touchdown').textContent = 'UNAVAILABLE'; $('prediction-assumption').textContent = 'Classic profile: flat-ground assist unavailable.'; return; }
+  const craft = mission.state.craft;
+  const zone = assessLandingZone(terrain, craft.position.x);
+  const prediction = predictTouchdown(craft, terrain, mission.config);
+  renderer.setPrediction(prediction);
+  $('terrain-slope').textContent = `${(zone.slope * 180 / Math.PI).toFixed(1)}°`;
+  $('landing-zone').textContent = zone.zone.toUpperCase();
+  $('landing-zone').className = zone.zone.toLowerCase();
+  $('horizontal-drift').textContent = `${craft.velocity.x >= 0 ? '+' : '−'}${Math.abs(craft.velocity.x).toFixed(1)} m/s`;
+  $('target-offset').textContent = `${targetOffset(terrain, craft.position.x) >= 0 ? '+' : '−'}${Math.abs(targetOffset(terrain, craft.position.x)).toFixed(1)} m`;
+  $('predicted-touchdown').textContent = prediction.available ? `${prediction.x >= 0 ? '+' : '−'}${Math.abs(prediction.x).toFixed(1)} m · ${prediction.zone.toUpperCase()}` : 'UNAVAILABLE';
+  $('prediction-assumption').textContent = prediction.available ? prediction.assumedControls : 'Prediction unavailable outside the modeled terrain envelope.';
+};
+window.setInterval(updatePrecisionGuidance, 250);

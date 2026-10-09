@@ -33,8 +33,8 @@ export class Mission {
       const beforeTime = this.state.time;
       const next = stepPhysics(before, this.config.fixedStep, this.config);
       this.state.craft = next;
-      this.state.time += PHYSICS.fixedStep;
-      this.accumulator -= PHYSICS.fixedStep;
+      this.state.time += this.config.fixedStep;
+      this.accumulator -= this.config.fixedStep;
       const contact = this.terrain ? detectLandingContact(next, this.terrain) : undefined;
       if (contact?.contact || (!this.terrain && this.state.craft.position.y <= this.config.terrainBase)) {
         const terrainHeight: number = contact ? this.terrain!.heightAt(next.position.x) : this.config.terrainBase;

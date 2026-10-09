@@ -30,3 +30,15 @@
 .mode-picker { display: grid; gap: 8px; margin-top: 20px; color: #83949b; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; }
 .mode-picker select { width: 100%; padding: 11px; border: 1px solid #52666c; background: #0b1117; color: #e9eeea; font: 12px 'IBM Plex Mono', monospace; }
 @media (max-width: 720px) { .modal { align-items: start; overflow-y: auto; } .modal-card { margin: 8vh 0; } }
+.guidance-details { margin-top: 22px; border-top: 1px solid #26343b; padding-top: 15px; font: 10px 'IBM Plex Mono', monospace; color: #83949b; }
+.guidance-details summary { cursor: pointer; letter-spacing: .12em; color: #9aacb0; }
+.guidance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; padding-top: 14px; }
+.guidance-grid button { grid-column: 1 / -1; padding: 9px 10px; border: 1px solid #52666c; background: #101a20; color: #68c5b1; text-align: left; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .06em; touch-action: manipulation; }
+.guidance-grid span { display: block; min-width: 0; }
+.guidance-grid b { display: block; margin-top: 4px; color: #e9eeea; font-weight: 500; }
+.guidance-grid b.safe { color: #68c5b1; } .guidance-grid b.caution { color: #f4a900; } .guidance-grid b.unsafe { color: #eb6b5e; }
+.guidance-grid .prediction-wide, .guidance-grid small { grid-column: 1 / -1; }
+.guidance-grid small { color: #71828a; line-height: 1.4; }
+@media (max-width: 720px) { .guidance-details { margin-top: 16px; } .guidance-grid { gap: 8px 10px; font-size: 9px; } }
+html { touch-action: manipulation; }
+body { overflow-x: hidden; }

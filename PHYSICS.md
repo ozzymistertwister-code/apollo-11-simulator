@@ -42,3 +42,5 @@ Surface thresholds are simulator rules, not NASA limits: stable slope is ≤ `0.
 - MIT OpenCourseWare, *Engineering Apollo: The Moon Project as a Complex System*, propulsion overview ([PDF](https://ocw.mit.edu/courses/sts-471j-engineering-apollo-the-moon-project-as-a-complex-system-spring-2007/1a2f426ce94c3479603c26872289f7b3_crimsonteam.pdf)).
 
 The model omits terrain relief, landing-leg dynamics, gimbal dynamics, RCS, propellant slosh, guidance laws, navigation errors, AGC/DSKY, and the historical Apollo 11 descent timeline. The Engineering profile is therefore a documented-parameter teaching mode, not a claim of full historical fidelity.
+
+The precision landing predictor is a gameplay instrument: it advances the same fixed-step equations and terrain collision queries while holding the current throttle and attitude. It is recalculated periodically for display, does not command the craft, and returns `UNAVAILABLE` when the modeled terrain envelope is not reached within its bounded horizon.
