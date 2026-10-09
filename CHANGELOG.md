@@ -20,6 +20,7 @@
 - Added `LEADERBOARD.md` with ranking, database, backup, recovery, and verification limitations.
 - Added the final QA documentation and release procedure. Browser submissions remain structurally validated but unverified; they are excluded from the official Top 10 until trusted server-side replay verification exists.
 - Final release validation covers 57 automated tests, the production build, API validation, duplicate submission handling, database backup, and static asset checks.
+- Added a Hall of Fame-first home screen. The physics loop remains idle until `START NEW MISSION`; Flight History, public details, and Replay remain available without launching a mission.
 
 ## v1.4.0 — 2026-10-09
 

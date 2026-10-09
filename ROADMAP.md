@@ -31,6 +31,7 @@
 - Implemented pilot callsigns, consented shared-flight submission, SQLite-backed public details, Hall of Fame filters, and local-vs-public flight separation.
 - Added strict bounded FlightRecord validation, duplicate-safe submissions, rate/request-size limits, database backup/recovery documentation, and explicit unverified-result handling.
 - Browser submissions are not eligible for the official Top 10 until a trusted server-side physics verifier is implemented. This release does not claim cheat-resistant ranking.
+- Hall of Fame is the initial screen; mission setup and physics start only after an explicit `START NEW MISSION` action.
 
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.

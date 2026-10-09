@@ -32,4 +32,6 @@ Shared leaderboard storage and its verification boundary are documented in [LEAD
 
 The v1.4.5 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement. The optional API is deployed alongside the existing FastAPI service and stores only consented public results in a dedicated SQLite database.
 
+On page load, the mission computer is idle and the Hall of Fame home screen appears first. `START NEW MISSION` then opens pilot, mode, and scenario selection. `FLIGHT HISTORY` and public Replay can be opened without starting a new flight; a missing or unavailable server never blocks local play.
+
 Select one of the five seeded scenarios before launch. Restart repeats the selected scenario. The Mission Report includes Flight Performance, Landing Site Assessment, and Mission Result sections, including a precision grade that does not reward an unsafe site. See [TERRAIN.md](TERRAIN.md) for the generation and coordinate model.
