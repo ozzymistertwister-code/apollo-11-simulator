@@ -3,3 +3,10 @@
  .touch-controls { display: none; position: absolute; inset: auto 18px 18px; grid-template-columns: repeat(4, 1fr); gap: 8px; }
  .touch-controls button { min-height: 48px; border: 1px solid #71828a; background: rgba(10,18,24,.72); color: #f4a900; font-size: 24px; }
  @media (max-width: 720px) { .touch-controls { display: grid; } }
+ .touch-controls { touch-action: none; user-select: none; -webkit-user-select: none; }
+ .touch-controls button { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+ .touch-controls button small { display: block; font: 8px 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #83949b; }
+ .touch-controls button.is-held, .touch-controls button:active { background: #f4a900; color: #101820; }
+ .touch-controls output { display: grid; place-items: center; min-height: 48px; border: 1px solid #f4a900; color: #f4a900; background: rgba(10,18,24,.84); font: 600 18px 'IBM Plex Mono', monospace; }
+ .engine-state, .fuel-state { display: block; margin-top: 8px; font: 9px 'IBM Plex Mono', monospace; letter-spacing: .1em; color: #68c5b1; }
+ .fuel-state { margin-top: 4px; color: #83949b; }

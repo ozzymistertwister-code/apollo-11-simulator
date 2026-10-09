@@ -1,6 +1,7 @@
 import { Mission } from '../simulation/mission';
 import { bindControls } from '../controls/controls';
 import { Renderer } from '../rendering/renderer';
+import { bindTouchControl, type TouchAction } from '../controls/touch';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 app.innerHTML = `<main class="shell"><header class="topbar"><div class="brand"><span class="brand-mark">✦</span><div><span class="eyebrow">NASA // FLIGHT DIRECTOR</span><strong>APOLLO 11</strong></div></div><div class="mission-stamp"><span>MISSION ELAPSED</span><b id="mission-time">00:00</b></div><div class="status"><i></i><span id="status-label">STANDBY</span></div></header><section class="layout"><aside class="telemetry"><div class="panel-title"><span>FLIGHT DATA</span><span class="live-dot">● LIVE</span></div><div class="readout-grid"><div class="readout" data-alert="altitude"><span>ALTITUDE</span><b id="altitude">420.0</b><small>m AGL</small></div><div class="readout" data-alert="vertical"><span>V / SPEED</span><b id="vertical">−5.0</b><small>m/s</small></div><div class="readout" data-alert="horizontal"><span>H / SPEED</span><b id="horizontal">0.0</b><small>m/s</small></div><div class="readout" data-alert="fuel"><span>FUEL</span><b id="fuel">8,200</b><small>kg</small></div><div class="readout"><span>THRUST</span><b id="thrust">0</b><small>kN</small></div><div class="readout"><span>ANGLE</span><b id="angle">0.0</b><small>deg</small></div></div><div class="throttle"><div><span>MAIN ENGINE</span><b id="throttle-value">0%</b></div><div class="meter"><i id="throttle-meter"></i></div></div><div class="keys"><span>CONTROLS</span><p><kbd>W</kbd><kbd>S</kbd> THROTTLE</p><p><kbd>←</kbd><kbd>→</kbd> ATTITUDE</p><p><kbd>SPACE</kbd> PAUSE <kbd>R</kbd> RESET</p></div></aside><section class="viewport"><canvas id="scene" aria-label="Live lunar landing view"></canvas><div class="telemetry-chip"><span>DESCENT CAMERA</span><b id="camera-readout">TRACKING // 01</b></div><div class="guidance"><span>GUIDANCE</span><b id="guidance">NOMINAL</b></div></section></section><footer class="footer"><span>APOLLO 11 / LUNAR MODULE EAGLE</span><span>SIMULATION 0.1.0 · GAME VALUES, NOT HISTORICAL FLIGHT DATA</span><button id="pause">PAUSE MISSION</button></footer><div class="modal active" id="start-modal"><div class="modal-card"><span class="eyebrow">FLIGHT PLAN // 01</span><h1>One small step<br><em>starts here.</em></h1><p>Throttle the Eagle through the final descent. Keep your velocity low, stay level, and find the surface.</p><div class="mission-note"><span>LANDING SITE</span><b>TRANQUILITY BASE</b><span>PHYSICS MODEL</span><b>LUNAR / 2D / FIXED STEP</b></div><button class="primary" id="start">START MISSION <span>↗</span></button></div></div><div class="modal" id="result-modal"><div class="modal-card"><span class="eyebrow">MISSION REPORT</span><h1 id="result-title">Touchdown.</h1><p id="result-copy"></p><div class="result-stats"><span>TOUCHDOWN TIME <b id="result-time">00:00</b></span><span>FINAL V / SPEED <b id="result-vspeed">0.0 m/s</b></span></div><button class="primary" id="restart">FLY AGAIN <span>↗</span></button></div></div></main>`;
@@ -15,10 +16,29 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-control
 
 const touchControls = document.createElement('div');
 touchControls.className = 'touch-controls';
-touchControls.innerHTML = '<button data-control="left">←</button><button data-control="throttle-down">−</button><button data-control="throttle-up">+</button><button data-control="right">→</button>';
+touchControls.setAttribute('aria-label', 'Touch flight controls');
+touchControls.innerHTML = '<button type="button" data-control="left" aria-label="Tilt left">←<small>TILT</small></button><button type="button" data-control="throttle-down" aria-label="Decrease thrust">−<small>THRUST</small></button><output id="touch-throttle-value" aria-live="polite">0%</output><button type="button" data-control="throttle-up" aria-label="Increase thrust">+<small>THRUST</small></button><button type="button" data-control="right" aria-label="Tilt right">→<small>TILT</small></button>';
 document.querySelector('.viewport')?.append(touchControls);
 for (const button of touchControls.querySelectorAll<HTMLButtonElement>('button')) {
-  const action = button.dataset.control;
-  const press = () => { if (action === 'throttle-up') mission.adjustThrottle(0.04); if (action === 'throttle-down') mission.adjustThrottle(-0.04); if (action === 'left') mission.rotate(-0.04); if (action === 'right') mission.rotate(0.04); };
-  button.addEventListener('pointerdown', press);
+  bindTouchControl(button, button.dataset.control as TouchAction, (action, amount) => {
+    if (action === 'throttle-up' || action === 'throttle-down') mission.adjustThrottle(amount);
+    else mission.rotate(amount);
+  });
 }
+const engineState = document.createElement('span');
+engineState.id = 'engine-state';
+engineState.className = 'engine-state';
+document.querySelector('.throttle')?.append(engineState);
+const fuelState = document.createElement('span');
+fuelState.id = 'fuel-state';
+fuelState.className = 'fuel-state';
+document.querySelector('[data-alert="fuel"]')?.append(fuelState);
+const updateMobileIndicators = () => {
+  const { craft } = mission.state;
+  const percent = `${Math.round(craft.throttle * 100)}%`;
+  const touchValue = document.querySelector<HTMLOutputElement>('#touch-throttle-value');
+  if (touchValue) touchValue.value = percent;
+  if (engineState) engineState.textContent = craft.engineOn ? 'ENGINE ON' : craft.fuel <= 0 ? 'FUEL EXHAUSTED' : 'ENGINE OFF';
+  if (fuelState) fuelState.textContent = craft.fuel <= 0 ? 'EMPTY' : craft.fuel < 1000 ? 'LOW' : 'TANK OK';
+};
+window.setInterval(updateMobileIndicators, 100);
