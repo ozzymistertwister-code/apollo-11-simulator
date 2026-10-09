@@ -18,9 +18,11 @@ export type TerrainProfile = Readonly<{
 }>;
 
 const SETTINGS: Record<TerrainDifficulty, { noise: number; craterCount: number; craterRadius: [number, number]; rocks: number; padWidth: number; safeSlope: number }> = {
-  easy: { noise: 0.35, craterCount: 3, craterRadius: [7, 16], rocks: 3, padWidth: 54, safeSlope: 0.10 },
-  normal: { noise: 1.1, craterCount: 7, craterRadius: [9, 27], rocks: 8, padWidth: 34, safeSlope: 0.16 },
-  hard: { noise: 2.1, craterCount: 11, craterRadius: [14, 38], rocks: 15, padWidth: 22, safeSlope: 0.22 }
+  // These are intentionally game-scale terminal-descent features, not a claim
+  // that the landing site is a surveyed historical lunar DEM.
+  easy: { noise: 2.5, craterCount: 3, craterRadius: [18, 32], rocks: 3, padWidth: 54, safeSlope: 0.10 },
+  normal: { noise: 7, craterCount: 7, craterRadius: [24, 52], rocks: 8, padWidth: 34, safeSlope: 0.16 },
+  hard: { noise: 12, craterCount: 11, craterRadius: [32, 70], rocks: 15, padWidth: 22, safeSlope: 0.22 }
 };
 
 const hash = (seed: number) => {
@@ -108,7 +110,7 @@ function generateTerrain(seed: number, difficulty: TerrainDifficulty): TerrainPr
     const side = random() < 0.5 ? -1 : 1;
     const x = side * (settings.padWidth / 2 + 18 + random() * (maxX - settings.padWidth / 2 - 45));
     const radius = lerp(settings.craterRadius[0], settings.craterRadius[1], random());
-    craters.push({ x, radius, depth: lerp(1.5, 4.8, random()) });
+    craters.push({ x, radius, depth: lerp(difficulty === 'easy' ? 5 : 10, difficulty === 'hard' ? 26 : 20, random()) });
   }
   for (const point of points) {
     for (const crater of craters) {

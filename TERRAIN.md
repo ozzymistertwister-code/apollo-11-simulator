@@ -10,9 +10,11 @@ Difficulty parameters:
 
 | Profile | Noise | Craters | Rocks | Guaranteed pad | Safe slope |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Easy | 0.35 m | 3 | 3 | 54 m | 0.10 rad |
-| Normal | 1.10 m | 7 | 8 | 34 m | 0.16 rad |
-| Hard | 2.10 m | 11 | 15 | 22 m | 0.22 rad |
+| Easy | 2.50 m | 3 | 3 | 54 m | 0.10 rad |
+| Normal | 7.00 m | 7 | 8 | 34 m | 0.16 rad |
+| Hard | 12.00 m | 11 | 15 | 22 m | 0.22 rad |
+
+The relief amplitudes are intentionally enlarged gameplay parameters so the same metres-based geometry is legible on a phone display; they are not historical site elevations.
 
 The pad is a gameplay guarantee, not a claim about the historical Apollo 11 landing site.
 
@@ -20,7 +22,7 @@ The pad is a gameplay guarantee, not a claim about the historical Apollo 11 land
 
 World X is horizontal in metres and world Y is height above the terrain datum in metres. `heightAt(x)` linearly interpolates the cached 4 m samples. `slopeAt(x)` uses a centred finite difference over half a sample. `normalAt(x)` returns the normalized `(-slope, 1)` vector. Obstacles are cached circles with a terrain-relative centre and radius.
 
-Physics and Canvas rendering receive the same `LunarTerrain` object. Renderer adds crater rim/shadow cues, rock silhouettes, and a restrained texture without generating new terrain per frame.
+Physics and Canvas rendering receive the same `LunarTerrain` object. Renderer samples the cached profile directly for the surface path, then adds crater interior shading/rim light, rock silhouettes, and restrained texture without generating new terrain per frame. The crater graphics are derived from the actual depressed profile, not independent circles.
 
 ## Landing zones and scenarios
 

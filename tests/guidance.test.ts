@@ -50,4 +50,5 @@ describe('precision landing guidance', () => {
   it('does not award precision for an unsafe landing site', () => { expect(assessPrecision(0, 0, 'SAFE LANDING', 'Unsafe').grade).toBe('F'); });
   it('returns N/A precision when no target was selected', () => { expect(assessPrecision(undefined, 0, 'SAFE LANDING', 'Safe').grade).toBe('N/A'); });
   it('keeps all five scenario seeds reproducible and distinct', () => { expect(SCENARIOS).toHaveLength(5); expect(new Set(SCENARIOS.map((scenario) => scenario.seed)).size).toBe(5); });
+  it('keeps gameplay-scale relief visible in every engineering difficulty', () => { for (const difficulty of ['easy', 'normal', 'hard'] as const) { const terrain = new LunarTerrain(1300, difficulty); const heights = terrain.profile.points.map((point) => point.y); expect(Math.max(...heights) - Math.min(...heights)).toBeGreaterThan(difficulty === 'easy' ? 2 : 10); } });
 });

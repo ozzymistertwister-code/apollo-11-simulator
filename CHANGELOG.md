@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.1 — 2026-10-09
+
+- Increased explicit gameplay-scale terrain relief so hills, depressions, and slopes remain legible on mobile screens.
+- Reworked crater rendering from circular overlays to profile-following depressions with lit/dark rims.
+- Added color-coded SAFE / CAUTION / UNSAFE surface bands under Landing Assist.
+- Corrected mobile touch control layout to keep all five controls in one row.
+
 ## v1.3.0 — 2026-10-09
 
 - Added deterministic seeded lunar terrain with Easy, Normal, and Hard profiles.
