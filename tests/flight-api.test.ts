@@ -19,4 +19,8 @@ describe('public flight API adapter', () => {
     await expect(submitPublicFlight(record, { name: 'Alex 11', publicConsent: true }, async () => { throw new Error('offline'); })).rejects.toThrow('offline');
     expect((await publicFlightSummary(record, { name: 'Alex 11', publicConsent: true })).recordId).toBe(record.id);
   });
+
+  it('surfaces backend validation details for retryable publication errors', async () => {
+    await expect(submitPublicFlight(record, { name: 'Alex 11', publicConsent: true }, async () => new Response(JSON.stringify({ detail: 'Public consent is required' }), { status: 400 }))).rejects.toThrow('Flight submission failed (400): Public consent is required');
+  });
 });

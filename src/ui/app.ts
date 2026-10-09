@@ -212,7 +212,7 @@ const publishRecord = async (record: FlightRecord, identity: PilotIdentity, stat
     button.classList.add('published');
     void refreshHall();
     return persisted;
-  } catch { statusElement.textContent = 'SERVER UNAVAILABLE · LOCAL RECORD KEPT · RETRY LATER'; button.disabled = false; return undefined; }
+  } catch (error) { const message = error instanceof Error ? error.message : 'Unknown server error'; statusElement.textContent = `${message} · LOCAL RECORD KEPT`; button.textContent = 'RETRY SAVE'; button.disabled = false; return undefined; }
 };
 const identityFromResultPanel = (): PilotIdentity | undefined => {
   const name = normalizePilotName(resultPilotInput.value);
@@ -221,7 +221,7 @@ const identityFromResultPanel = (): PilotIdentity | undefined => {
   if (!resultPilotConsent.checked) { publishStatus.textContent = 'PUBLIC CONSENT IS REQUIRED TO PUBLISH'; return undefined; }
   savePilotName(name); pilotNameInput.value = name; pilotConsentInput.checked = true; return { name, publicConsent: true };
 };
-publishButton.addEventListener('click', async () => { const record = mission.state.flightRecord; if (!record || record.report.outcome !== 'success') return; const identity = identityFromResultPanel(); if (!identity) return; await publishRecord(enrichCompletedRecord(record, identity), identity, publishStatus, publishButton); });
+publishButton.addEventListener('click', async () => { const record = mission.state.flightRecord; if (!record || record.report.outcome !== 'success') return; const identity = identityFromResultPanel(); if (!identity) return; const enriched = enrichCompletedRecord(record, identity); await recordStore.save(enriched); await publishRecord(enriched, identity, publishStatus, publishButton); });
 publishReplayButton.addEventListener('click', () => { const record = mission.state.flightRecord; if (!record) return; resultModal.classList.remove('active'); historyPanel.open = true; openReplay(enrichCompletedRecord(record, pilotIdentity)); });
 
 const historyPanel = document.createElement('details');

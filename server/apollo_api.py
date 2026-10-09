@@ -72,6 +72,11 @@ class FlightSubmission(BaseModel):
     touchdownAngle: float | None = Field(default=None, ge=-180, le=180)
     fuelUsed: float | None = Field(default=None, ge=0, le=1_000_000)
     flightTime: float = Field(ge=0, le=3_600)
+    targetDistance: float | None = Field(default=None, ge=0, le=1_000_000)
+    terrainSlope: float | None = Field(default=None, ge=-180, le=180)
+    moduleCondition: str | None = Field(default=None, max_length=64)
+    initialFuel: float | None = Field(default=None, ge=0, le=1_000_000)
+    remainingFuel: float | None = Field(default=None, ge=0, le=1_000_000)
     telemetryRef: str = Field(min_length=8, max_length=160)
     telemetryHash: str = Field(min_length=8, max_length=128)
     flightRecord: dict | None = None

@@ -81,7 +81,14 @@ export type PublicSubmissionResult = Readonly<{ id: string; verified: boolean; d
 
 export async function submitPublicFlight(record: FlightRecord, identity: PilotIdentity, fetcher: typeof fetch = fetch): Promise<PublicSubmissionResult> {
   const response = await fetcher('/apollo/api/flights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await publicFlightSummary(record, identity)) });
-  if (!response.ok) throw new Error(`Flight submission failed (${response.status})`);
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const body = await response.json() as { detail?: string | Array<{ msg?: string }> };
+      detail = Array.isArray(body.detail) ? body.detail.map((item) => item.msg).filter(Boolean).join('; ') : body.detail ?? '';
+    } catch { /* Preserve the HTTP status when the server did not return JSON. */ }
+    throw new Error(`Flight submission failed (${response.status})${detail ? `: ${detail}` : ''}`);
+  }
   return response.json() as Promise<{ id: string; verified: boolean; duplicate?: boolean }>;
 }
 
