@@ -12,6 +12,7 @@
 
 - Seeded Easy/Normal/Hard lunar terrain, obstacles, safe pads, shared rendering/physics geometry, and two-point landing-gear contact.
 - Remaining v1.3 work: tuning/review of presentation and release validation.
+- Part 3 adds reproducible scenario selection, precision grading, expanded Mission Report, and release QA. AGC/DSKY/3D remain future work.
 
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.

@@ -5,6 +5,8 @@ import { LunarTerrain } from '../src/terrain/lunar-terrain';
 import { assessLandingZone, targetOffset } from '../src/simulation/landing-guidance';
 import { predictTouchdown } from '../src/simulation/touchdown-prediction';
 import { INITIAL_CAMERA, updateCamera } from '../src/rendering/camera';
+import { assessPrecision } from '../src/simulation/precision-grade';
+import { SCENARIOS } from '../src/simulation/scenarios';
 
 describe('precision landing guidance', () => {
   it('smoothly follows horizontal movement and zooms in near the surface', () => {
@@ -45,4 +47,7 @@ describe('precision landing guidance', () => {
     const terrain = new LunarTerrain(1101, 'normal');
     expect(targetOffset(terrain, terrain.nearestSafePad(0).center)).toBe(0);
   });
+  it('does not award precision for an unsafe landing site', () => { expect(assessPrecision(0, 0, 'SAFE LANDING', 'Unsafe').grade).toBe('F'); });
+  it('returns N/A precision when no target was selected', () => { expect(assessPrecision(undefined, 0, 'SAFE LANDING', 'Safe').grade).toBe('N/A'); });
+  it('keeps all five scenario seeds reproducible and distinct', () => { expect(SCENARIOS).toHaveLength(5); expect(new Set(SCENARIOS.map((scenario) => scenario.seed)).size).toBe(5); });
 });

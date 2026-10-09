@@ -75,7 +75,7 @@ export function assessLanding(telemetry: TouchdownTelemetry, config: PhysicsConf
   const vertical = Math.abs(telemetry.verticalSpeed);
   const horizontal = Math.abs(telemetry.horizontalSpeed);
   const tilt = Math.abs(telemetry.angle);
-  const base = { slope: telemetry.slope ?? 0, supportContacts: telemetry.supportContacts ?? 2, obstacleContact: telemetry.obstacleContact ?? false };
+  const base = { slope: telemetry.slope ?? 0, supportContacts: telemetry.supportContacts ?? 2, obstacleContact: telemetry.obstacleContact ?? false, gearStatus: telemetry.obstacleContact || telemetry.hullContact ? 'OBSTRUCTED CONTACT' as const : (telemetry.supportContacts ?? 2) === 2 ? 'STABLE CONTACT' as const : (telemetry.supportContacts ?? 2) === 1 ? 'PARTIAL CONTACT' as const : 'NO CONTACT' as const };
   const slopeMagnitude = Math.abs(telemetry.slope ?? 0);
   const geometryResult = slopeMagnitude > LANDING_GEAR.maxTipSlope ? 'TIP-OVER' : slopeMagnitude > LANDING_GEAR.maxStableSlope || (telemetry.supportContacts ?? 2) < 2 ? 'UNSTABLE LANDING' : 'SAFE LANDING';
   const surfaceResult = telemetry.result && telemetry.result !== 'SAFE LANDING' ? telemetry.result : geometryResult;
@@ -89,7 +89,7 @@ export function assessLanding(telemetry: TouchdownTelemetry, config: PhysicsConf
     return { grade: 'A', safetyGrade: 'A', condition: 'Intact', outcome: 'success', result: 'SAFE LANDING', stable: true, ...base, summary: 'Safe touchdown. The module is stable within the playable landing envelope.' };
   }
   if (vertical <= config.hardVerticalSpeed && horizontal <= config.hardHorizontalSpeed && tilt <= config.hardTilt) {
-    return { grade: 'B', safetyGrade: 'B', condition: 'Minor Damage', outcome: 'hard', result: 'HARD LANDING', stable: false, ...base, summary: 'Hard touchdown. The module landed, but the landing gear may be damaged.' };
+    return { grade: 'B', safetyGrade: 'B', condition: 'Minor Damage', outcome: 'hard', result: 'HARD LANDING', stable: false, ...base, summary: 'Hard touchdown. The module reached the surface with elevated contact loads.' };
   }
   if (vertical <= config.criticalVerticalSpeed && horizontal <= config.criticalHorizontalSpeed && tilt <= config.criticalTilt) {
     return { grade: 'C', safetyGrade: 'C', condition: 'Major Damage', outcome: 'crash', result: 'CRASH', stable: false, ...base, summary: 'Critical touchdown. The module reached the surface with serious damage.' };

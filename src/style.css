@@ -27,6 +27,14 @@
 .surface-report { display: grid; grid-template-columns: 1.3fr 1fr; gap: 9px 16px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #34474d; font: 10px 'IBM Plex Mono', monospace; }
 .surface-report span { color: #83949b; letter-spacing: .07em; }
 .surface-report b { color: #68c5b1; font-weight: 500; }
+.scenario-picker small { color: #71828a; letter-spacing: 0; font: 10px 'IBM Plex Mono', monospace; }
+.mission-report-v13 { margin-top: 18px; padding-top: 16px; border-top: 1px solid #34474d; font: 10px 'IBM Plex Mono', monospace; color: #83949b; }
+.mission-report-v13 summary { cursor: pointer; color: #9aacb0; letter-spacing: .08em; }
+.report-section { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 14px; padding-top: 15px; }
+.report-section strong { grid-column: 1 / -1; color: #f4a900; font-weight: 500; letter-spacing: .08em; }
+.report-section span { min-width: 0; } .report-section b { display: block; margin-top: 4px; color: #e9eeea; font-weight: 500; }
+.report-section .report-wide { grid-column: 1 / -1; }
+@media (max-width: 420px) { .report-section { gap: 8px 10px; font-size: 9px; } }
 .mode-picker { display: grid; gap: 8px; margin-top: 20px; color: #83949b; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; }
 .mode-picker select { width: 100%; padding: 11px; border: 1px solid #52666c; background: #0b1117; color: #e9eeea; font: 12px 'IBM Plex Mono', monospace; }
 @media (max-width: 720px) { .modal { align-items: start; overflow-y: auto; } .modal-card { margin: 8vh 0; } }

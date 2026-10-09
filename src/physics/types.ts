@@ -15,6 +15,7 @@ export type LandingResult = 'SAFE LANDING' | 'HARD LANDING' | 'UNSTABLE LANDING'
 
 export type TouchdownGrade = 'A+' | 'A' | 'B' | 'C' | 'F';
 export type ModuleCondition = 'Intact' | 'Minor Damage' | 'Major Damage' | 'Destroyed';
+export type LandingGearStatus = 'STABLE CONTACT' | 'PARTIAL CONTACT' | 'NO CONTACT' | 'OBSTRUCTED CONTACT';
 
 export type TouchdownTelemetry = Readonly<{
   verticalSpeed: number;
@@ -43,6 +44,7 @@ export type LandingAssessment = Readonly<{
   supportContacts: number;
   obstacleContact: boolean;
   stable: boolean;
+  gearStatus: LandingGearStatus;
   summary: string;
 }>;
 

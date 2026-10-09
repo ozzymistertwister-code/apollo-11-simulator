@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.3.0 — local Part 1 checkpoint
+## v1.3.0 — 2026-10-09
 
 - Added deterministic seeded lunar terrain with Easy, Normal, and Hard profiles.
 - Added shared terrain height, slope, normal, obstacle, and safe-pad queries for physics and Canvas rendering.
@@ -8,6 +8,10 @@
 - Expanded physics coverage to 29 tests. Publication is intentionally deferred to Part 2/3.
 - Added precision landing guidance, safe-zone assist markers, predicted touchdown, adaptive camera zoom/tracking, and compact terrain telemetry.
 - Added five guidance/camera tests; publication remains deferred until Part 3.
+- Added five reproducible flight scenarios with restart support.
+- Expanded Mission Report with Flight Performance, Landing Site Assessment, and Mission Result sections.
+- Added precision grade with unsafe-site penalty and generalized contact-status wording.
+- Completed release QA; production publication follows after this commit.
 
 ## v1.2.0 — 2026-10-09
 

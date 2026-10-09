@@ -21,3 +21,5 @@ npm run build
 Version `1.3.0` adds deterministic lunar terrain and two-point landing-gear contact in Engineering Mode while preserving the flat-ground Classic profile. Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md). Publication is deferred until the remaining v1.3 work is complete.
 
 Engineering Mode also provides optional `LANDING ASSIST` markers, terrain slope/zone/drift telemetry, and a `PREDICTED TOUCHDOWN` estimate assuming current throttle and attitude are held. The estimate is read-only and reports `UNAVAILABLE` outside the modeled envelope.
+
+Select one of the five seeded scenarios before launch. Restart repeats the selected scenario. The Mission Report includes Flight Performance, Landing Site Assessment, and Mission Result sections, including a precision grade that does not reward an unsafe site. See [TERRAIN.md](TERRAIN.md) for the generation and coordinate model.
