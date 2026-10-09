@@ -9,6 +9,7 @@
 - Added 2 compatibility tests; total automated coverage is now 59 tests.
 - Added explicit post-landing publication with server read-back confirmation and a visible pending-verification explanation.
 - Added retry publication for successful historical local flights without changing their original telemetry or timestamp.
+- Critical hotfix: added Community Top 10 for saved unverified results, separate from Verified Top 10; publication now returns and displays the deterministic Community rank.
 
 ## v1.4.5 — 2026-10-09
 

@@ -11,7 +11,7 @@ The production database is `/var/lib/apollo-11-simulator/flights.sqlite3`. The `
 ## API
 
 - `POST /apollo/api/flights` — validates and stores a public submission. Consent is required; repeated `recordId` values are idempotent.
-- `GET /apollo/api/leaderboard` — returns at most ten official entries. Filters are `mode`, `scenarioId`, and `difficulty`; the UI defaults to Engineering.
+- `GET /apollo/api/leaderboard` — returns at most ten entries for `ranking=community` (the default) or `ranking=verified`. Filters are `mode`, `scenarioId`, and `difficulty`; the UI defaults to Community Engineering.
 - `GET /apollo/api/flights/:id` — returns the public summary and stored FlightRecord when available for details and Replay.
 
 The UI publishes only after an explicit `SAVE TO HALL OF FAME` action. It reads the returned public record after POST; a message is not shown as saved until that read succeeds. Unverified submissions return `SERVER CONFIRMED · PENDING VERIFICATION · NOT IN TOP 10`, which explains why they are stored but absent from the official list.
@@ -20,7 +20,7 @@ Nginx applies the existing `syst8m_chat_limit` rate limit, a 32 KiB request limi
 
 ## Ranking rules
 
-Official entries require `verified=true`, `verification_status='verified'`, `legacy=0`, and `outcome='success'`. The API always separates Classic and Engineering with the `mode` filter; scenario and difficulty filters define a comparable ranking group. Sorting within that group is deterministic:
+Community entries require consented, structurally valid storage, `outcome='success'`, and `verification_status IN ('unverified','verified')`. They are visibly labelled `COMMUNITY / UNVERIFIED` when not independently checked. Verified entries additionally require `verified=true`, `verification_status='verified'`, and `legacy=0`. The API always separates Classic and Engineering with the `mode` filter; scenario and difficulty filters define a comparable ranking group. Sorting within that group is deterministic:
 
 1. safe completed outcome (`success` is required);
 2. Landing Safety Grade (`A+`, `A`, `B`, `C`, `F`);
@@ -32,7 +32,7 @@ Official entries require `verified=true`, `verification_status='verified'`, `leg
 
 The query applies `LIMIT 10` after this ordering. It does not replace or delete other valid rows.
 
-The server currently sets browser submissions to `verified=false` and `verification_status='unverified'`. Structural validation proves that the payload is well-formed and internally consistent, but it does not independently replay the physical model or prove that a browser did not forge values. Therefore the official Top 10 can remain empty until a trusted verification workflow marks a result verified. The UI explicitly reports this state and does not claim anti-cheat protection. Records from versions before 1.4.5 are marked `legacy=1` and cannot enter the official ranking without an explicit, documented verification process.
+The server currently sets browser submissions to `verified=false` and `verification_status='unverified'`. Structural validation proves that the payload is well-formed and internally consistent, but it does not independently replay the physical model or prove that a browser did not forge values. Therefore Community Top 10 is a public, unverified comparison and makes no anti-cheat claim; Verified Top 10 remains separate and can remain empty until a trusted verification workflow marks a result verified. Records from versions before 1.4.5 are marked `legacy=1` and cannot enter Verified Top 10 without an explicit, documented verification process.
 
 ## Telemetry and privacy
 

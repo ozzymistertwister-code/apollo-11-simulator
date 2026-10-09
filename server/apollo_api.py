@@ -25,6 +25,34 @@ def _is_legacy_version(value: str) -> bool:
         return True
 
 
+RANKING_ORDER = "CASE safety_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE precision_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE efficiency_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, COALESCE(ABS(touchdown_vertical_speed) + ABS(touchdown_horizontal_speed), 1e9), created_at ASC, id ASC"
+
+
+def _ranking_scope(ranking: str, mode: str | None, scenario_id: str | None, difficulty: str | None) -> tuple[str, list[object]]:
+    clauses = ["outcome = 'success'"]
+    params: list[object] = []
+    if ranking == "verified":
+        clauses.extend(["verified = 1", "verification_status = 'verified'", "legacy = 0"])
+    else:
+        clauses.append("verification_status IN ('unverified', 'verified')")
+    if mode:
+        clauses.append("mode = ?"); params.append(mode)
+    if scenario_id:
+        clauses.append("scenario_id = ?"); params.append(scenario_id)
+    if difficulty:
+        clauses.append("difficulty = ?"); params.append(difficulty)
+    return " AND ".join(clauses), params
+
+
+def _community_rank(connection: sqlite3.Connection, row_id: str, mode: str, scenario_id: str | None, difficulty: str | None) -> int | None:
+    where, params = _ranking_scope("community", mode, scenario_id, difficulty)
+    rows = connection.execute(f"SELECT id FROM flights WHERE {where} ORDER BY {RANKING_ORDER}", params).fetchall()
+    for index, row in enumerate(rows, 1):
+        if row[0] == row_id:
+            return index if index <= 10 else index
+    return None
+
+
 class FlightSubmission(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pilotName: str = Field(min_length=2, max_length=24)
@@ -168,7 +196,8 @@ def submit_flight(payload: FlightSubmission):
     try:
         existing = connection.execute("SELECT * FROM flights WHERE record_id = ?", (payload.recordId,)).fetchone()
         if existing:
-            return {"id": existing["id"], "verified": bool(existing["verified"]), "verificationStatus": existing["verification_status"], "eligible": bool(existing["verified"] and not existing["legacy"] and existing["outcome"] == "success"), "rank": None, "reason": "ALREADY SAVED · RANKING REQUIRES VERIFIED RESULT" if not existing["verified"] else "ALREADY SAVED", "duplicate": True}
+            rank = _community_rank(connection, existing["id"], existing["mode"], existing["scenario_id"], existing["difficulty"]) if existing["outcome"] == "success" else None
+            return {"id": existing["id"], "verified": bool(existing["verified"]), "verificationStatus": existing["verification_status"], "eligible": bool(rank and rank <= 10), "communityRank": rank if rank and rank <= 10 else None, "rank": rank if rank and rank <= 10 else None, "reason": "ALREADY SAVED · PUBLISHED COMMUNITY" if rank and rank <= 10 else "ALREADY SAVED · NOT IN TOP 10", "duplicate": True}
         server_id = str(uuid.uuid4())
         connection.execute("""INSERT INTO flights
             (id, record_id, pilot_name, created_at, simulator_version, mode, scenario_id, terrain_seed,
@@ -189,26 +218,22 @@ def submit_flight(payload: FlightSubmission):
              ((payload.flightRecord.get("report") or {}).get("touchdown") or {}).get("fuel") if payload.flightRecord else None,
              record_json))
         connection.commit()
-        return {"id": server_id, "verified": False, "verificationStatus": "unverified", "eligible": False, "rank": None, "reason": "SERVER CONFIRMED · PENDING VERIFICATION · NOT IN TOP 10", "duplicate": False}
+        community_rank = _community_rank(connection, server_id, payload.mode, payload.scenarioId, payload.difficulty) if payload.outcome == "success" else None
+        return {"id": server_id, "verified": False, "verificationStatus": "unverified", "eligible": bool(community_rank and community_rank <= 10), "communityRank": community_rank if community_rank and community_rank <= 10 else None, "rank": community_rank if community_rank and community_rank <= 10 else None, "reason": "PUBLISHED COMMUNITY" if community_rank and community_rank <= 10 else "SERVER CONFIRMED · NOT IN COMMUNITY TOP 10", "duplicate": False}
     finally:
         connection.close()
 
 
 @router.get("/leaderboard")
-def leaderboard(include_pending: bool = Query(default=False), mode: Literal["classic", "engineering"] | None = None, scenarioId: str | None = Query(default=None, max_length=64), difficulty: Literal["easy", "normal", "hard"] | None = None):
+def leaderboard(include_pending: bool = Query(default=False), ranking: Literal["community", "verified"] = Query(default="community"), mode: Literal["classic", "engineering"] | None = None, scenarioId: str | None = Query(default=None, max_length=64), difficulty: Literal["easy", "normal", "hard"] | None = None):
     connection = _connect()
     try:
-        clauses = ["verified = 1", "verification_status = 'verified'", "legacy = 0", "outcome = 'success'"]
-        params: list[object] = []
-        if mode: clauses.append("mode = ?"); params.append(mode)
-        if scenarioId: clauses.append("scenario_id = ?"); params.append(scenarioId)
-        if difficulty: clauses.append("difficulty = ?"); params.append(difficulty)
-        where = " AND ".join(clauses)
-        order = "CASE safety_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE precision_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE efficiency_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, COALESCE(ABS(touchdown_vertical_speed) + ABS(touchdown_horizontal_speed), 1e9), created_at ASC, id ASC"
+        where, params = _ranking_scope(ranking, mode, scenarioId, difficulty)
+        order = RANKING_ORDER
         verified = connection.execute(f"SELECT * FROM flights WHERE {where} ORDER BY {order} LIMIT 10", params).fetchall()
         pending = connection.execute("SELECT * FROM flights WHERE verified = 0 ORDER BY created_at DESC LIMIT 20").fetchall() if include_pending else []
         pending_count = connection.execute("SELECT COUNT(*) FROM flights WHERE verified = 0").fetchone()[0]
-        return {"entries": [_public(row) for row in verified], "pending": [_public(row) for row in pending], "pendingCount": pending_count}
+        return {"ranking": ranking, "entries": [_public(row) for row in verified], "pending": [_public(row) for row in pending], "pendingCount": pending_count}
     finally:
         connection.close()
 
