@@ -1,6 +1,6 @@
 {
   "name": "apollo-11-simulator",
-  "version": "1.0.2",
+  "version": "1.2.0",
   "private": false,
   "type": "module",
   "scripts": {

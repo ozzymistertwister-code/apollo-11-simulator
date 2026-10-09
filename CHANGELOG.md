@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.0 — 2026-10-09
+
+- Added Classic and Engineering flight profiles.
+- Added documented LM descent-engine parameters where available and marked simulator assumptions in PHYSICS.md.
+- Added separate Landing Safety Grade and Fuel Efficiency Grade with touchdown mass telemetry.
+- Expanded deterministic test coverage to 21 tests, including profile selection and Mission FPS independence.
+
 ## v1.0.2 — 2026-10-09
 
 - Added immutable launch/landing fuel telemetry and fuel-used percentage.

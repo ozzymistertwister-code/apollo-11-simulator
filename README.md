@@ -18,4 +18,4 @@ npm test
 npm run build
 ```
 
-Version `1.0.2` uses clearly marked gameplay assumptions in `src/config/physics.ts`, not exact historical Apollo 11 specifications. Mission Report preserves interpolated touchdown telemetry before contact damping and reports fuel economy. The configured starting reserve is `8,200 kg`; `fuelUsed = initialFuel - remainingFuel`, and `fuelUsedPercent = fuelUsed / initialFuel × 100`. Fuel efficiency is graded only for safe landings. See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [CHANGELOG.md](CHANGELOG.md).
+Version `1.2.0` provides Classic and Engineering profiles. Engineering uses documented LM descent-engine limits where available; remaining simplifications are marked in [PHYSICS.md](PHYSICS.md). Mission Report preserves interpolated touchdown telemetry and reports separate landing safety and fuel-efficiency grades. See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [CHANGELOG.md](CHANGELOG.md).

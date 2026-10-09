@@ -1,6 +1,7 @@
 import type { Mission } from '../simulation/mission';
 
-export function bindControls(mission: Mission, onPause: () => void, onReset: () => void) {
+export function bindControls(getMission: (() => Mission) | Mission, onPause: () => void, onReset: () => void) {
+  if (typeof getMission !== 'function') return () => undefined;
   const held = new Set<string>();
   window.addEventListener('keydown', (event) => {
     if (['ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
@@ -10,6 +11,7 @@ export function bindControls(mission: Mission, onPause: () => void, onReset: () 
   });
   window.addEventListener('keyup', (event) => held.delete(event.code));
   return () => {
+    const mission = typeof getMission === 'function' ? getMission() : getMission;
     if (held.has('KeyW')) mission.adjustThrottle(0.65 / 60);
     if (held.has('KeyS')) mission.adjustThrottle(-0.65 / 60);
     if (held.has('ArrowLeft')) mission.rotate(-0.42 / 60);

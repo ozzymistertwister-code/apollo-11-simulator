@@ -24,3 +24,6 @@
  .fuel-bar { grid-column: 1 / -1; height: 7px; background: #25343a; border: 1px solid #3a4c52; }
  .fuel-bar i { display: block; height: 100%; width: 0; background: #f4a900; transition: width .2s ease-out; }
  @media (max-width: 420px) { .fuel-report { gap: 9px 12px; font-size: 9px; } }
+.mode-picker { display: grid; gap: 8px; margin-top: 20px; color: #83949b; font: 10px 'IBM Plex Mono', monospace; letter-spacing: .08em; }
+.mode-picker select { width: 100%; padding: 11px; border: 1px solid #52666c; background: #0b1117; color: #e9eeea; font: 12px 'IBM Plex Mono', monospace; }
+@media (max-width: 720px) { .modal { align-items: start; overflow-y: auto; } .modal-card { margin: 8vh 0; } }

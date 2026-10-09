@@ -21,12 +21,14 @@ export type TouchdownTelemetry = Readonly<{
   totalSpeed: number;
   angle: number;
   fuel: number;
+  mass: number;
   flightTime: number;
   position: Vector;
 }>;
 
 export type LandingAssessment = Readonly<{
   grade: TouchdownGrade;
+  safetyGrade: TouchdownGrade;
   condition: ModuleCondition;
   outcome: LandingOutcome;
   summary: string;
@@ -40,4 +42,5 @@ export type FuelTelemetry = Readonly<{
   fuelUsed: number;
   fuelUsedPercent: number;
   efficiencyGrade: FuelEfficiencyGrade;
+  mode: 'classic' | 'engineering';
 }>;
