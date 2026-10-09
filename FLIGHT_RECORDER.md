@@ -28,6 +28,6 @@ Completed records are also consumed by the v1.4 Replay and Analytics panel. Repl
 
 ## Pilot identity and shared results
 
-Version 1.4.5 accepts an optional 2–24 character Latin or Cyrillic callsign. The last callsign is stored locally; no email, password, IP address, or other profile data is collected. Public submission requires an explicit consent checkbox. The server receives a summary and a `flight-record:<id>` reference plus a hash, not the raw telemetry. Local IndexedDB remains the source of the full record when the server or network is unavailable.
+Version 1.4.5 accepts an optional 2–24 character Latin or Cyrillic callsign. The last callsign is stored locally; no email, password, IP address, or other profile data is collected. Public submission requires an explicit consent checkbox. The server receives the public summary plus a bounded FlightRecord needed for public details and Replay, together with a `flight-record:<id>` reference and hash. Local IndexedDB remains the source of the full record when the server or network is unavailable.
 
-Browser-submitted summaries are stored as `verified=false`. The official Top 10 endpoint excludes them until an independent verifier is available; pending submissions may be displayed separately. Duplicate submissions are idempotent by FlightRecord ID.
+Browser-submitted summaries and records are stored as `verified=false`. The official Top 10 endpoint excludes them until an independent verifier is available; pending submissions may be displayed separately. Duplicate submissions are idempotent by FlightRecord ID. Public details and Replay show `UNAVAILABLE` when the stored record is absent or incompatible.

@@ -7,6 +7,13 @@
 - Added existing-server SQLite API integration with input validation, rate limiting, separate storage, and `verified=false` protection for browser submissions.
 - Added 53 tests covering identity validation, API payload minimization, offline failure, and existing v1.4 behavior.
 
+## v1.4.5 — local Part 2 checkpoint — 2026-10-09
+
+- Added `HALL OF FAME // TOP 10` with Engineering-default mode, mode/scenario/difficulty filters, local date/time formatting, and deterministic ranking.
+- Added public flight detail cards with Mission, Landing, Fuel, Precision, telemetry, and Replay actions.
+- Added separate `MY FLIGHTS // LOCAL DEVICE` labeling and public-record availability handling.
+- Extended the existing SQLite API with comparable-condition filters and bounded FlightRecord retrieval for public Replay.
+
 ## v1.4.0 — 2026-10-09
 
 - Added a fixed-simulation-time Flight Recorder for complete missions.

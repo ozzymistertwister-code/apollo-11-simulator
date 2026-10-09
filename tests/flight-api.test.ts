@@ -12,7 +12,7 @@ describe('public flight API adapter', () => {
     let body = '';
     const response = await submitPublicFlight(record, { name: 'Орёл-1', publicConsent: true }, async (_input, init) => { body = String(init?.body); return new Response(JSON.stringify({ id: 'server-id', verified: false }), { status: 201 }); });
     const payload = JSON.parse(body);
-    expect(response.verified).toBe(false); expect(payload.pilotName).toBe('Орёл-1'); expect(payload.telemetryRef).toBe('flight-record:flight-api-test-1234'); expect(payload.telemetry).toBeUndefined();
+    expect(response.verified).toBe(false); expect(payload.pilotName).toBe('Орёл-1'); expect(payload.telemetryRef).toBe('flight-record:flight-api-test-1234'); expect(payload.flightRecord.id).toBe(record.id); expect(payload.flightRecord.telemetry).toHaveLength(1);
   });
 
   it('surfaces network failure without changing the local record', async () => {
