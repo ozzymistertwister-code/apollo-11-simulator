@@ -28,6 +28,8 @@ The `FLIGHT HISTORY // REPLAY & ANALYTICS` panel opens completed local records w
 
 `HALL OF FAME // TOP 10` shows only independently verified successful landings under comparable mode/scenario/difficulty filters. `MY FLIGHTS // LOCAL DEVICE` remains separate from server results; public details can open the stored FlightRecord in the existing Analytics or Replay views.
 
-The v1.4.0 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement.
+Shared leaderboard storage and its verification boundary are documented in [LEADERBOARD.md](LEADERBOARD.md). Browser submissions are structurally validated but remain unverified until a trusted server-side physics verifier is available.
+
+The v1.4.5 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement. The optional API is deployed alongside the existing FastAPI service and stores only consented public results in a dedicated SQLite database.
 
 Select one of the five seeded scenarios before launch. Restart repeats the selected scenario. The Mission Report includes Flight Performance, Landing Site Assessment, and Mission Result sections, including a precision grade that does not reward an unsafe site. See [TERRAIN.md](TERRAIN.md) for the generation and coordinate model.

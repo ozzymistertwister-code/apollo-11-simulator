@@ -115,14 +115,37 @@ def _public(row: sqlite3.Row) -> dict:
             "verified": bool(row["verified"])}
 
 
+def _validate_record_shape(record: dict, payload: FlightSubmission) -> None:
+    telemetry = record.get("telemetry")
+    if record.get("recordVersion") != 1 or record.get("id") != payload.recordId or not isinstance(telemetry, list):
+        raise HTTPException(status_code=400, detail="Incompatible FlightRecord")
+    if not 1 <= len(telemetry) <= 10_000:
+        raise HTTPException(status_code=400, detail="Invalid telemetry length")
+    if record.get("mode") != payload.mode or record.get("simulatorVersion") != payload.simulatorVersion:
+        raise HTTPException(status_code=400, detail="FlightRecord metadata mismatch")
+    previous_time = -1.0
+    for sample in telemetry:
+        if not isinstance(sample, dict):
+            raise HTTPException(status_code=400, detail="Invalid telemetry sample")
+        sample_time = sample.get("time")
+        if not isinstance(sample_time, (int, float)) or not math.isfinite(sample_time) or sample_time < previous_time or sample_time > 3_600:
+            raise HTTPException(status_code=400, detail="Invalid telemetry time")
+        previous_time = float(sample_time)
+        for value in sample.values():
+            if isinstance(value, float) and not math.isfinite(value):
+                raise HTTPException(status_code=400, detail="Non-finite telemetry value")
+    report = record.get("report") or {}
+    if report.get("outcome") != payload.outcome:
+        raise HTTPException(status_code=400, detail="Mission outcome mismatch")
+
+
 @router.post("/flights", status_code=status.HTTP_201_CREATED)
 def submit_flight(payload: FlightSubmission):
     if not payload.publicConsent:
         raise HTTPException(status_code=400, detail="Public consent is required")
     record_json = None
     if payload.flightRecord is not None:
-        if payload.flightRecord.get("recordVersion") != 1 or payload.flightRecord.get("id") != payload.recordId or not isinstance(payload.flightRecord.get("telemetry"), list):
-            raise HTTPException(status_code=400, detail="Incompatible FlightRecord")
+        _validate_record_shape(payload.flightRecord, payload)
         record_json = json.dumps(payload.flightRecord, separators=(",", ":"), ensure_ascii=False)
         if len(record_json.encode("utf-8")) > 512 * 1024:
             raise HTTPException(status_code=413, detail="FlightRecord is too large")

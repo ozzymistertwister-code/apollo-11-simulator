@@ -1,18 +1,25 @@
 # Changelog
 
-## v1.4.5 — local Part 1 checkpoint — 2026-10-09
+## v1.4.5 — 2026-10-09
 
 - Added optional Latin/Cyrillic pilot callsign entry with local persistence and explicit public-display consent.
 - Added public flight-summary API adapter, shared leaderboard panel, duplicate-safe submission, and offline-safe behavior.
 - Added existing-server SQLite API integration with input validation, rate limiting, separate storage, and `verified=false` protection for browser submissions.
-- Added 53 tests covering identity validation, API payload minimization, offline failure, and existing v1.4 behavior.
+- Added automated coverage for identity validation, API payload minimization, offline failure, and existing v1.4 behavior.
 
-## v1.4.5 — local Part 2 checkpoint — 2026-10-09
+### Hall of Fame and public details
 
 - Added `HALL OF FAME // TOP 10` with Engineering-default mode, mode/scenario/difficulty filters, local date/time formatting, and deterministic ranking.
 - Added public flight detail cards with Mission, Landing, Fuel, Precision, telemetry, and Replay actions.
 - Added separate `MY FLIGHTS // LOCAL DEVICE` labeling and public-record availability handling.
 - Extended the existing SQLite API with comparable-condition filters and bounded FlightRecord retrieval for public Replay.
+
+### QA and release hardening
+
+- Added strict server-side FlightRecord shape, size, finite-value, timestamp, metadata, and outcome validation.
+- Added `LEADERBOARD.md` with ranking, database, backup, recovery, and verification limitations.
+- Added the final QA documentation and release procedure. Browser submissions remain structurally validated but unverified; they are excluded from the official Top 10 until trusted server-side replay verification exists.
+- Final release validation covers 57 automated tests, the production build, API validation, duplicate submission handling, database backup, and static asset checks.
 
 ## v1.4.0 — 2026-10-09
 

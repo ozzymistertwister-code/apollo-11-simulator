@@ -26,6 +26,12 @@
 - Completed for v1.4.0: final automated QA, versioned documentation, GitHub tag, and release.
 - Published to `https://syst8m.com/apollo/` through the existing `anker` VPS SSH deployment path. The current `/apollo/` directory is backed up before replacement; nginx configuration and other sites are untouched.
 
+## v1.4.5
+
+- Implemented pilot callsigns, consented shared-flight submission, SQLite-backed public details, Hall of Fame filters, and local-vs-public flight separation.
+- Added strict bounded FlightRecord validation, duplicate-safe submissions, rate/request-size limits, database backup/recovery documentation, and explicit unverified-result handling.
+- Browser submissions are not eligible for the official Top 10 until a trusted server-side physics verifier is implemented. This release does not claim cheat-resistant ranking.
+
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.
 - **v0.4** — DSKY interface, verb/noun entry, alarms, and guidance-computer telemetry.

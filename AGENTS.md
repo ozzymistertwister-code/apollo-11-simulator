@@ -11,3 +11,5 @@
 - Preserve `recordVersion` compatibility when extending stored records; new fields must be optional or migrated explicitly.
 - Keep IndexedDB retention bounded to 20 completed records and never persist an incomplete mission as complete.
 - Run `npm test` and `npm run build` before every release commit. Do not create or move existing Git tags without explicit authorization.
+- Shared leaderboard submissions must remain explicitly unverified unless a trusted server-side physics verifier exists; never describe structural validation as anti-cheat.
+- Keep public leaderboard sorting deterministic and exclude crashes, unverified records, and incomparable mode/scenario/difficulty conditions.
