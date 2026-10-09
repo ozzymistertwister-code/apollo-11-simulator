@@ -8,6 +8,8 @@ import { exportFlightCsv, exportFlightJson } from '../recording/flight-export';
 import { FlightReplay, replayEventMarkers } from '../recording/flight-replay';
 import { analyzeFlight, comparableFlights, type FlightAnalytics } from '../recording/flight-analytics';
 import type { FlightRecord } from '../recording/types';
+import { loadPilotName, normalizePilotName, savePilotName, validatePilotName, type PilotIdentity } from '../pilot/pilot-identity';
+import { fetchLeaderboard, submitPublicFlight } from '../online/flight-api';
 import { bindControls } from '../controls/controls';
 import { Renderer } from '../rendering/renderer';
 import { bindTouchControl, type TouchAction } from '../controls/touch';
@@ -21,6 +23,24 @@ const modePicker = document.createElement('label');
 modePicker.className = 'mode-picker';
 modePicker.innerHTML = 'FLIGHT MODE <select id="flight-mode"><option value="classic">Classic — playable profile</option><option value="engineering">Engineering — documented LM limits</option></select>';
 startModal.querySelector('.modal-card')?.insertBefore(modePicker, startModal.querySelector('.mission-note'));
+const pilotPanel = document.createElement('div');
+pilotPanel.className = 'pilot-panel';
+pilotPanel.innerHTML = '<label for="pilot-name">PILOT NAME / CALLSIGN</label><input id="pilot-name" maxlength="24" autocomplete="nickname" placeholder="Optional for local flight"><small id="pilot-name-hint">2–24 letters, numbers, spaces, hyphens, or underscores.</small><label class="pilot-consent"><input id="pilot-consent" type="checkbox"> I consent to display this callsign and result publicly.</label><small id="pilot-share-hint">A name is required only for the shared leaderboard. No email or password is collected.</small>';
+startModal.querySelector('.modal-card')?.insertBefore(pilotPanel, startModal.querySelector('.mission-note'));
+const pilotNameInput = pilotPanel.querySelector<HTMLInputElement>('#pilot-name')!;
+const pilotConsentInput = pilotPanel.querySelector<HTMLInputElement>('#pilot-consent')!;
+const pilotNameHint = pilotPanel.querySelector<HTMLElement>('#pilot-name-hint')!;
+pilotNameInput.value = loadPilotName();
+let pilotIdentity: PilotIdentity | undefined;
+const readPilotIdentity = (): PilotIdentity | undefined => {
+  const name = normalizePilotName(pilotNameInput.value);
+  const error = validatePilotName(name);
+  if (!name && !pilotConsentInput.checked) { pilotNameHint.textContent = 'Local flight only. Enter a callsign to submit to the shared leaderboard.'; return undefined; }
+  if (error) { pilotNameHint.textContent = error; pilotNameInput.focus(); return undefined; }
+  if (pilotConsentInput.checked && !name) { pilotNameHint.textContent = 'A valid callsign is required for public sharing.'; pilotNameInput.focus(); return undefined; }
+  savePilotName(name); pilotNameHint.textContent = pilotConsentInput.checked ? 'Ready for public leaderboard submission.' : 'Local callsign saved on this device.'; return { name, publicConsent: pilotConsentInput.checked };
+};
+pilotNameInput.addEventListener('input', () => { if (pilotNameInput.value) validatePilotName(normalizePilotName(pilotNameInput.value)); });
 function update() { const { craft, time, status, outcome } = mission.state; $('altitude').textContent = Math.max(0, craft.position.y).toFixed(1); $('vertical').textContent = `${craft.velocity.y >= 0 ? '+' : '−'}${Math.abs(craft.velocity.y).toFixed(1)}`; $('horizontal').textContent = `${craft.velocity.x >= 0 ? '+' : '−'}${Math.abs(craft.velocity.x).toFixed(1)}`; $('fuel').textContent = Math.round(craft.fuel).toLocaleString(); $('thrust').textContent = Math.round(craft.throttle * 45.5).toFixed(1); $('angle').textContent = `${craft.angle >= 0 ? '+' : '−'}${(Math.abs(craft.angle) * 180 / Math.PI).toFixed(1)}`; $('throttle-value').textContent = `${Math.round(craft.throttle * 100)}%`; $('throttle-meter').style.width = `${craft.throttle * 100}%`; $('mission-time').textContent = formatTime(time); $('status-label').textContent = status === 'active' ? 'DESCENT ACTIVE' : status === 'paused' ? 'PAUSED' : status === 'complete' ? (outcome === 'success' ? 'TOUCHDOWN' : 'MISSION ENDED') : 'STANDBY'; $('guidance').textContent = Math.abs(craft.velocity.y) > 8 ? 'REDUCE V / SPEED' : Math.abs(craft.angle) > 0.45 ? 'CORRECT ATTITUDE' : 'NOMINAL'; $('guidance').className = Math.abs(craft.velocity.y) > 8 || Math.abs(craft.angle) > 0.45 ? 'warning' : ''; renderer.draw(craft, time); }
 let last = performance.now(); function loop(now: number) { mission.tick((now - last) / 1000); last = now; update(); if (mission.state.status === 'complete' && !resultModal.classList.contains('active')) showResult(); requestAnimationFrame(loop); } function showResult() { const outcome = mission.state.outcome; $('result-title').textContent = outcome === 'success' ? 'Touchdown.' : outcome === 'hard' ? 'Hard landing.' : 'Impact detected.'; $('result-copy').textContent = outcome === 'success' ? 'The Eagle is on the surface. A controlled descent, a clean touchdown, and Tranquility Base is yours.' : outcome === 'hard' ? 'The module reached the surface with damage. Your next descent needs less velocity and a steadier attitude.' : 'The descent exceeded the safe envelope. Reset and use the throttle earlier to bleed off vertical speed.'; $('result-time').textContent = formatTime(mission.state.time); $('result-vspeed').textContent = `${Math.abs(mission.state.craft.velocity.y).toFixed(1)} m/s`; resultModal.classList.add('active'); }
 function reset() { const selected = ($('flight-mode') as HTMLSelectElement).value as FlightMode; if (mission.mode !== selected) mission = new Mission(selected); else mission.reset(); resultModal.classList.remove('active'); startModal.classList.remove('active'); mission.start(); } $('start').addEventListener('click', reset); $('restart').addEventListener('click', reset); $('pause').addEventListener('click', () => { mission.pause(); $('pause').textContent = mission.state.status === 'paused' ? 'RESUME MISSION' : 'PAUSE MISSION'; }); bindControls(mission, () => { mission.pause(); $('pause').textContent = mission.state.status === 'paused' ? 'RESUME MISSION' : 'PAUSE MISSION'; }, reset); window.addEventListener('resize', () => { renderer.resize(); update(); }); renderer.resize(); update(); requestAnimationFrame(loop);
@@ -91,7 +111,7 @@ const updateFuelReport = () => {
 };
 window.setInterval(updateFuelReport, 100);
 const footerVersion = document.querySelector<HTMLElement>('.footer span:nth-child(2)');
-if (footerVersion) footerVersion.textContent = 'APOLLO 11 // v1.4.0 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
+if (footerVersion) footerVersion.textContent = 'APOLLO 11 // v1.4.5 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
 const keyboardStep = bindControls(() => mission, () => mission.pause(), () => reset());
 window.setInterval(keyboardStep, 1000 / 60);
 window.setInterval(() => renderer.setTerrain(mission.terrain), 100);
@@ -135,13 +155,14 @@ document.querySelector('.telemetry')?.append(recorderPanel);
 const recorderStatus = recorderPanel.querySelector<HTMLElement>('#recorder-status')!;
 const exportJsonButton = recorderPanel.querySelector<HTMLButtonElement>('#export-json')!;
 const exportCsvButton = recorderPanel.querySelector<HTMLButtonElement>('#export-csv')!;
+const submittedFlightIds = new Set<string>();
 const download = (name: string, content: string, type: string) => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type })); link.download = name; link.click(); URL.revokeObjectURL(link.href); };
 const currentRecord = () => mission.state.flightRecord ?? storedRecord;
 exportJsonButton.addEventListener('click', () => { const record = currentRecord(); if (record) download(`${record.id}.json`, exportFlightJson(record), 'application/json'); });
 exportCsvButton.addEventListener('click', () => { const record = currentRecord(); if (record) download(`${record.id}.csv`, exportFlightCsv(record), 'text/csv'); });
 const refreshRecorderStatus = async () => { try { const records = await recordStore.list(20); storedRecord = records[0]; const hasRecord = Boolean(currentRecord()); exportJsonButton.disabled = !hasRecord; exportCsvButton.disabled = !hasRecord; recorderStatus.textContent = `${records.length} SAVED RECORD${records.length === 1 ? '' : 'S'} · INDEXEDDB`; } catch { recorderStatus.textContent = 'STORAGE UNAVAILABLE'; } };
 void refreshRecorderStatus();
-window.setInterval(() => { const record = currentRecord(); if (!record || lastSavedFlightId === record.id) return; lastSavedFlightId = record.id; recordStore.save(record).then(() => { exportJsonButton.disabled = false; exportCsvButton.disabled = false; void refreshRecorderStatus(); }).catch(() => { recorderStatus.textContent = 'SAVE FAILED · STORAGE LIMIT OR UNAVAILABLE'; }); }, 250);
+window.setInterval(() => { const record = currentRecord(); if (!record || lastSavedFlightId === record.id) return; lastSavedFlightId = record.id; recordStore.save(record).then(async () => { exportJsonButton.disabled = false; exportCsvButton.disabled = false; void refreshRecorderStatus(); if (mission.state.flightRecord?.id === record.id && pilotIdentity?.publicConsent && !submittedFlightIds.has(record.id)) { try { const result = await submitPublicFlight(record, pilotIdentity); submittedFlightIds.add(record.id); recorderStatus.textContent = result.verified ? 'SUBMITTED · VERIFIED' : 'SUBMITTED · PENDING VERIFICATION'; } catch { recorderStatus.textContent = 'LOCAL SAVE OK · SERVER UNAVAILABLE'; } } }).catch(() => { recorderStatus.textContent = 'SAVE FAILED · STORAGE LIMIT OR UNAVAILABLE'; }); }, 250);
 
 const historyPanel = document.createElement('details');
 historyPanel.className = 'history-panel';
@@ -195,6 +216,16 @@ historyPanel.querySelector('#replay-speed')?.addEventListener('change', (event) 
 replayTimeline.addEventListener('input', () => { activeReplay?.seek(Number(replayTimeline.value)); drawReplay(); });
 const replayLoop = (now: number) => { const dt = (now - lastReplayFrame) / 1000; lastReplayFrame = now; if (activeReplay) { activeReplay.tick(dt); replayTimeline.value = String(activeReplay.state.time); drawReplay(); } requestAnimationFrame(replayLoop); }; requestAnimationFrame(replayLoop);
 void refreshHistory();
+const leaderboardPanel = document.createElement('details');
+leaderboardPanel.className = 'leaderboard-panel';
+leaderboardPanel.innerHTML = '<summary>GLOBAL LEADERBOARD</summary><div id="leaderboard-status">LOADING</div><div id="leaderboard-list"></div>';
+document.querySelector('.telemetry')?.append(leaderboardPanel);
+const leaderboardStatus = leaderboardPanel.querySelector<HTMLElement>('#leaderboard-status')!;
+const leaderboardList = leaderboardPanel.querySelector<HTMLElement>('#leaderboard-list')!;
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ?? character);
+const refreshLeaderboard = async () => { try { const data = await fetchLeaderboard(); leaderboardStatus.textContent = `${data.entries.length} VERIFIED ENTRIES · ${data.pending.length} PENDING`; leaderboardList.innerHTML = data.entries.length ? data.entries.map((entry, index) => `<div class="leaderboard-row"><b>${index + 1}</b><span>${escapeHtml(entry.pilotName)}<small>${entry.mode.toUpperCase()} · ${entry.scenarioId ?? 'CLASSIC'} · ${entry.safetyGrade}</small></span><strong>${entry.outcome.toUpperCase()}</strong></div>`).join('') : '<p class="leaderboard-empty">No independently verified results yet. Shared submissions remain pending.</p>'; } catch { leaderboardStatus.textContent = 'SERVER UNAVAILABLE · LOCAL PLAY CONTINUES'; leaderboardList.innerHTML = ''; } };
+void refreshLeaderboard();
+window.setInterval(() => void refreshLeaderboard(), 30000);
 
 const scenarioPicker = document.createElement('label');
 scenarioPicker.className = 'scenario-picker mode-picker';
@@ -204,6 +235,9 @@ const scenarioSelect = scenarioPicker.querySelector<HTMLSelectElement>('#scenari
 const scenarioDescription = scenarioPicker.querySelector<HTMLElement>('#scenario-description')!;
 scenarioSelect.addEventListener('change', () => { scenarioDescription.textContent = scenarioById(scenarioSelect.value as ScenarioId).description; });
 const launchSelectedScenario = () => {
+  const identity = readPilotIdentity();
+  if (pilotConsentInput.checked && !identity) return;
+  pilotIdentity = identity;
   const selectedMode = ($('flight-mode') as HTMLSelectElement).value as FlightMode;
   const scenario = scenarioById(scenarioSelect.value as ScenarioId);
   if (selectedMode === 'engineering') mission = new Mission('engineering', scenario.difficulty, scenario.seed, scenario.id, scenario.targetX);

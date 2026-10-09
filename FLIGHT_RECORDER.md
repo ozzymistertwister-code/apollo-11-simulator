@@ -25,3 +25,9 @@ The recorder panel restores the newest stored completed record after a reload an
 This is a simulator record, not an Apollo mission data interchange format. Sampling is 10 Hz and the model remains the existing 2D, fixed-step gameplay model.
 
 Completed records are also consumed by the v1.4 Replay and Analytics panel. Replay interpolates stored telemetry for the selected timeline time and never calls the physics engine. Analytics derives metrics such as descent rate, braking start, thrust, fuel use, engine time, dangerous-descent time, horizontal displacement, and touchdown values directly from the samples; unavailable values are shown as `N/A`.
+
+## Pilot identity and shared results
+
+Version 1.4.5 accepts an optional 2–24 character Latin or Cyrillic callsign. The last callsign is stored locally; no email, password, IP address, or other profile data is collected. Public submission requires an explicit consent checkbox. The server receives a summary and a `flight-record:<id>` reference plus a hash, not the raw telemetry. Local IndexedDB remains the source of the full record when the server or network is unavailable.
+
+Browser-submitted summaries are stored as `verified=false`. The official Top 10 endpoint excludes them until an independent verifier is available; pending submissions may be displayed separately. Duplicate submissions are idempotent by FlightRecord ID.

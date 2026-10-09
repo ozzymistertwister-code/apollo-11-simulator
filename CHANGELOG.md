@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.5 — local Part 1 checkpoint — 2026-10-09
+
+- Added optional Latin/Cyrillic pilot callsign entry with local persistence and explicit public-display consent.
+- Added public flight-summary API adapter, shared leaderboard panel, duplicate-safe submission, and offline-safe behavior.
+- Added existing-server SQLite API integration with input validation, rate limiting, separate storage, and `verified=false` protection for browser submissions.
+- Added 53 tests covering identity validation, API payload minimization, offline failure, and existing v1.4 behavior.
+
 ## v1.4.0 — 2026-10-09
 
 - Added a fixed-simulation-time Flight Recorder for complete missions.

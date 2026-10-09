@@ -18,7 +18,7 @@ npm test
 npm run build
 ```
 
-Version `1.4.0` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.1 and adds a local Flight Recorder. A completed mission records fixed-step telemetry and grouped pilot events, persists the last 20 completed flights in IndexedDB, and can export JSON or CSV from the recorder panel. See [FLIGHT_RECORDER.md](FLIGHT_RECORDER.md) for the versioned format and storage policy.
+Version `1.4.5` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.1 and adds pilot callsigns plus an optional shared-flight submission path on top of v1.4. A completed mission records fixed-step telemetry and grouped pilot events, persists the last 20 completed flights in IndexedDB, and can export JSON or CSV from the recorder panel. See [FLIGHT_RECORDER.md](FLIGHT_RECORDER.md) for the versioned format and storage policy.
 
 Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md) and [TERRAIN.md](TERRAIN.md).
 
