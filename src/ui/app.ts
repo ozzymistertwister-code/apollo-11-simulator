@@ -91,7 +91,7 @@ const updateFuelReport = () => {
 };
 window.setInterval(updateFuelReport, 100);
 const footerVersion = document.querySelector<HTMLElement>('.footer span:nth-child(2)');
-if (footerVersion) footerVersion.textContent = 'SIMULATION 1.3.1 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
+if (footerVersion) footerVersion.textContent = 'APOLLO 11 // v1.4.0 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
 const keyboardStep = bindControls(() => mission, () => mission.pause(), () => reset());
 window.setInterval(keyboardStep, 1000 / 60);
 window.setInterval(() => renderer.setTerrain(mission.terrain), 100);

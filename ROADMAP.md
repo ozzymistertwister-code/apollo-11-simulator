@@ -14,18 +14,16 @@
 - Remaining v1.3 work: tuning/review of presentation and release validation.
 - Part 3 adds reproducible scenario selection, precision grading, expanded Mission Report, and release QA. AGC/DSKY/3D remain future work.
 
-## v1.4.0 Part 1 — local checkpoint
+## v1.4.0
 
 - Added a versioned FlightRecord with fixed-step telemetry for position, AGL, velocities, accelerations, attitude, thrust, mass, fuel, engine state, mode, scenario, and terrain seed.
 - Added grouped pilot/system event logging, completion-only persistence, IndexedDB retention of 20 records, and JSON/CSV export.
 - Remaining v1.4 work: recorder history UI improvements, broader browser-device QA, and final release validation.
 
-## v1.4.0 Part 2 — local checkpoint
-
 - Added stored-flight history with replay, pause/resume, timeline seeking, event markers, and 0.5×/1×/2×/4× playback.
 - Added selectable altitude, velocity, thrust, fuel, attitude, and acceleration charts plus telemetry-derived landing analytics.
 - Added two-flight comparison with same-condition detection, mismatch warning, and isolated record deletion.
-- Remaining v1.4 work: final mobile/browser QA, release validation, and publication.
+- Completed for v1.4.0: final mobile/browser QA, release validation, and publication.
 
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.
