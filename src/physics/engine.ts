@@ -1,5 +1,5 @@
 import { PHYSICS, type PhysicsConfig } from '../config/physics';
-import type { CraftState, LandingAssessment, LandingOutcome, TouchdownTelemetry, Vector } from './types';
+import type { CraftState, FuelEfficiencyGrade, FuelTelemetry, LandingAssessment, LandingOutcome, TouchdownTelemetry, Vector } from './types';
 
 export const initialCraft = (config: PhysicsConfig = PHYSICS): CraftState => ({
   position: { x: 0, y: config.initialAltitude },
@@ -73,6 +73,29 @@ export function assessLanding(telemetry: TouchdownTelemetry, config: PhysicsConf
     return { grade: 'C', condition: 'Major Damage', outcome: 'crash', summary: 'Critical touchdown. The module reached the surface with serious damage.' };
   }
   return { grade: 'F', condition: 'Destroyed', outcome: 'crash', summary: 'Crash. The landing exceeded the playable survival envelope.' };
+}
+
+export function fuelEfficiencyGrade(fuelUsedPercent: number, safeLanding: boolean): FuelEfficiencyGrade {
+  if (!safeLanding) return 'N/A';
+  if (fuelUsedPercent <= 20) return 'A+';
+  if (fuelUsedPercent <= 35) return 'A';
+  if (fuelUsedPercent <= 50) return 'B';
+  if (fuelUsedPercent <= 70) return 'C';
+  return 'D';
+}
+
+export function captureFuelTelemetry(initialFuel: number, remainingFuel: number, safeLanding: boolean): FuelTelemetry {
+  const start = Math.max(0, initialFuel);
+  const remaining = Math.min(start, Math.max(0, remainingFuel));
+  const used = start - remaining;
+  const usedPercent = start > 0 ? (used / start) * 100 : 0;
+  return Object.freeze({
+    initialFuel: start,
+    remainingFuel: remaining,
+    fuelUsed: used,
+    fuelUsedPercent: usedPercent,
+    efficiencyGrade: fuelEfficiencyGrade(usedPercent, safeLanding)
+  });
 }
 
 export function resolveTerrainContact(craft: CraftState, terrainHeight = PHYSICS.terrainBase): CraftState {

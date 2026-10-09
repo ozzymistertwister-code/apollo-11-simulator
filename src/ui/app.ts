@@ -59,3 +59,21 @@ const updateLandingReport = () => {
   $('landing-condition').textContent = assessment.condition;
 };
 window.setInterval(updateLandingReport, 100);
+
+const fuelReport = document.createElement('div');
+fuelReport.className = 'fuel-report';
+fuelReport.innerHTML = '<div><span>STARTING FUEL</span><b id="fuel-starting">—</b></div><div><span>FUEL USED</span><b id="fuel-used">—</b></div><div><span>FUEL REMAINING</span><b id="fuel-remaining">—</b></div><div><span>FUEL USED (%)</span><b id="fuel-used-percent">—</b></div><div class="fuel-grade"><span>FUEL EFFICIENCY GRADE</span><b id="fuel-grade">—</b></div><div class="fuel-bar" aria-label="Fuel used"><i id="fuel-bar-used"></i></div>';
+reportCard?.append(fuelReport);
+const updateFuelReport = () => {
+  const fuel = mission.state.fuelTelemetry;
+  if (!fuel) return;
+  $('fuel-starting').textContent = `${Math.round(fuel.initialFuel).toLocaleString()} kg`;
+  $('fuel-used').textContent = `${Math.round(fuel.fuelUsed).toLocaleString()} kg`;
+  $('fuel-remaining').textContent = `${Math.round(fuel.remainingFuel).toLocaleString()} kg`;
+  $('fuel-used-percent').textContent = `${fuel.fuelUsedPercent.toFixed(1)}%`;
+  $('fuel-grade').textContent = fuel.efficiencyGrade;
+  $('fuel-bar-used').style.width = `${Math.min(100, Math.max(0, fuel.fuelUsedPercent))}%`;
+};
+window.setInterval(updateFuelReport, 100);
+const footerVersion = document.querySelector<HTMLElement>('.footer span:nth-child(2)');
+if (footerVersion) footerVersion.textContent = 'SIMULATION 1.0.2 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';

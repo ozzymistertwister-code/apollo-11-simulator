@@ -16,3 +16,11 @@
  .touchdown-report b { display: block; margin-top: 5px; color: #f4a900; font-weight: 500; }
  .touchdown-report .report-wide { grid-column: 1 / -1; }
  @media (max-width: 420px) { .touchdown-report { gap: 10px; font-size: 9px; } }
+ .fuel-report { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 18px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #34474d; font: 10px 'IBM Plex Mono', monospace; }
+ .fuel-report span { display: block; color: #83949b; letter-spacing: .07em; }
+ .fuel-report b { display: block; margin-top: 4px; color: #e9eeea; font-weight: 500; }
+ .fuel-report .fuel-grade { grid-column: 1 / -1; }
+ .fuel-report .fuel-grade b { color: #f4a900; font-size: 18px; }
+ .fuel-bar { grid-column: 1 / -1; height: 7px; background: #25343a; border: 1px solid #3a4c52; }
+ .fuel-bar i { display: block; height: 100%; width: 0; background: #f4a900; transition: width .2s ease-out; }
+ @media (max-width: 420px) { .fuel-report { gap: 9px 12px; font-size: 9px; } }

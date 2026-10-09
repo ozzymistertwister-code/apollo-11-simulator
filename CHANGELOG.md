@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.2 — 2026-10-09
+
+- Added immutable launch/landing fuel telemetry and fuel-used percentage.
+- Added Mission Report fuel breakdown, efficiency grade, and horizontal usage bar.
+- Fuel efficiency is reported only for safe landings; crashes show `N/A`.
+- Added tests for the 8,200 kg configured reserve and reset behaviour.
+
 ## v1.0.1 — 2026-10-09
 
 - Preserved interpolated pre-contact speed, angle, fuel, time, and position in immutable `TouchdownTelemetry`.

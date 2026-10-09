@@ -31,3 +31,13 @@ export type LandingAssessment = Readonly<{
   outcome: LandingOutcome;
   summary: string;
 }>;
+
+export type FuelEfficiencyGrade = 'A+' | 'A' | 'B' | 'C' | 'D' | 'N/A';
+
+export type FuelTelemetry = Readonly<{
+  initialFuel: number;
+  remainingFuel: number;
+  fuelUsed: number;
+  fuelUsedPercent: number;
+  efficiencyGrade: FuelEfficiencyGrade;
+}>;

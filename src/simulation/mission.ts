@@ -1,15 +1,15 @@
 import { PHYSICS } from '../config/physics';
-import { assessLanding, captureTouchdown, initialCraft, resolveTerrainContact, stepPhysics } from '../physics/engine';
-import type { CraftState, LandingAssessment, LandingOutcome, TouchdownTelemetry } from '../physics/types';
+import { assessLanding, captureFuelTelemetry, captureTouchdown, initialCraft, resolveTerrainContact, stepPhysics } from '../physics/engine';
+import type { CraftState, FuelTelemetry, LandingAssessment, LandingOutcome, TouchdownTelemetry } from '../physics/types';
 
 export type MissionStatus = 'ready' | 'active' | 'paused' | 'complete';
-export type MissionState = { craft: CraftState; time: number; status: MissionStatus; outcome?: LandingOutcome; touchdown?: TouchdownTelemetry; assessment?: LandingAssessment };
+export type MissionState = { craft: CraftState; time: number; status: MissionStatus; initialFuel?: number; outcome?: LandingOutcome; touchdown?: TouchdownTelemetry; assessment?: LandingAssessment; fuelTelemetry?: FuelTelemetry };
 
 export class Mission {
   state: MissionState = { craft: initialCraft(), time: 0, status: 'ready' };
   private accumulator = 0;
 
-  start() { this.state.status = 'active'; }
+  start() { if (this.state.status === 'ready') this.state.initialFuel = this.state.craft.fuel; this.state.status = 'active'; }
   pause() { if (this.state.status === 'active') this.state.status = 'paused'; else if (this.state.status === 'paused') this.state.status = 'active'; }
   reset() { this.state = { craft: initialCraft(), time: 0, status: 'ready' }; this.accumulator = 0; }
   setThrottle(value: number) { this.state.craft.throttle = Math.min(1, Math.max(0, value)); this.state.craft.engineOn = this.state.craft.throttle > 0 && this.state.craft.fuel > 0; }
@@ -30,6 +30,7 @@ export class Mission {
         this.state.assessment = assessLanding(this.state.touchdown);
         this.state.craft = resolveTerrainContact(this.state.craft);
         this.state.outcome = this.state.assessment.outcome;
+        this.state.fuelTelemetry = captureFuelTelemetry(this.state.initialFuel ?? PHYSICS.initialFuel, this.state.touchdown.fuel, this.state.assessment.outcome === 'success');
         this.state.status = 'complete';
         break;
       }

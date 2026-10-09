@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PHYSICS } from '../src/config/physics';
-import { assessLanding, captureTouchdown, classifyLanding, initialCraft, stepPhysics, thrustVector } from '../src/physics/engine';
+import { assessLanding, captureFuelTelemetry, captureTouchdown, classifyLanding, initialCraft, stepPhysics, thrustVector } from '../src/physics/engine';
 import { Mission } from '../src/simulation/mission';
 
 describe('lunar physics', () => {
@@ -19,4 +19,7 @@ describe('lunar physics', () => {
   it('classifies a critical and a crash touchdown', () => { expect(assessLanding({ verticalSpeed: -8, horizontalSpeed: 7, totalSpeed: 10.63, angle: 0.4, fuel: 1000, flightTime: 10, position: { x: 0, y: 0 } }).grade).toBe('C'); expect(assessLanding({ verticalSpeed: -20, horizontalSpeed: 0, totalSpeed: 20, angle: 0, fuel: 0, flightTime: 10, position: { x: 0, y: 0 } }).grade).toBe('F'); });
   it('stores one touchdown result and clears it on reset', () => { const mission = new Mission(); mission.state = { ...mission.state, status: 'active', craft: { ...initialCraft(), position: { x: 0, y: 0.01 }, velocity: { x: 0, y: -1.2 } } }; mission.tick(PHYSICS.fixedStep); expect(mission.state.touchdown?.verticalSpeed).toBeLessThan(0); const first = mission.state.touchdown; mission.tick(1); expect(mission.state.touchdown).toBe(first); mission.reset(); expect(mission.state.touchdown).toBeUndefined(); expect(mission.state.assessment).toBeUndefined(); });
   it('returns deterministic results for identical touchdown inputs', () => { const input = { verticalSpeed: -1.2, horizontalSpeed: 0.8, totalSpeed: 1.44, angle: 0.03, fuel: 2000, flightTime: 42, position: { x: 12, y: 0 } }; expect(assessLanding(input)).toEqual(assessLanding({ ...input, position: { ...input.position } })); });
+  it('calculates fuel used from the configured starting reserve', () => { const fuel = captureFuelTelemetry(PHYSICS.initialFuel, 6150, true); expect(fuel.initialFuel).toBe(8200); expect(fuel.remainingFuel).toBe(6150); expect(fuel.fuelUsed).toBe(2050); expect(fuel.fuelUsedPercent).toBeCloseTo(25, 5); expect(fuel.efficiencyGrade).toBe('A'); });
+  it('does not reward fuel economy for unsafe landings', () => { expect(captureFuelTelemetry(PHYSICS.initialFuel, 8000, false).efficiencyGrade).toBe('N/A'); expect(captureFuelTelemetry(PHYSICS.initialFuel, 0, true).efficiencyGrade).toBe('D'); });
+  it('resets fuel telemetry for a new launch', () => { const mission = new Mission(); mission.start(); mission.state.fuelTelemetry = captureFuelTelemetry(mission.state.initialFuel!, 7000, true); mission.reset(); expect(mission.state.initialFuel).toBeUndefined(); expect(mission.state.fuelTelemetry).toBeUndefined(); mission.start(); expect(mission.state.initialFuel).toBe(PHYSICS.initialFuel); });
 });
