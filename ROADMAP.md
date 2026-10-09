@@ -23,7 +23,8 @@
 - Added stored-flight history with replay, pause/resume, timeline seeking, event markers, and 0.5×/1×/2×/4× playback.
 - Added selectable altitude, velocity, thrust, fuel, attitude, and acceleration charts plus telemetry-derived landing analytics.
 - Added two-flight comparison with same-condition detection, mismatch warning, and isolated record deletion.
-- Completed for v1.4.0: final mobile/browser QA, release validation, and publication.
+- Completed for v1.4.0: final automated QA, versioned documentation, GitHub tag, and release.
+- Pending external deployment: the repository contains no server deploy command, hosting manifest, or deployment credential for syst8m.com; production must be updated through the site's existing administrator-controlled mechanism.
 
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.
