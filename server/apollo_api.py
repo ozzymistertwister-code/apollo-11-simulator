@@ -44,8 +44,9 @@ def _ranking_scope(ranking: str, mode: str | None, scenario_id: str | None, diff
     return " AND ".join(clauses), params
 
 
-def _community_rank(connection: sqlite3.Connection, row_id: str, mode: str, scenario_id: str | None, difficulty: str | None) -> int | None:
+def _community_rank(connection: sqlite3.Connection, row_id: str, mode: str, scenario_id: str | None, difficulty: str | None, record_type: str = "flight") -> int | None:
     where, params = _ranking_scope("community", mode, scenario_id, difficulty)
+    where += " AND record_type = ?"; params.append(record_type)
     rows = connection.execute(f"SELECT id FROM flights WHERE {where} ORDER BY {RANKING_ORDER}", params).fetchall()
     for index, row in enumerate(rows, 1):
         if row[0] == row_id:
@@ -203,7 +204,7 @@ def submit_flight(payload: FlightSubmission):
     try:
         existing = connection.execute("SELECT * FROM flights WHERE record_id = ?", (payload.recordId,)).fetchone()
         if existing:
-            rank = _community_rank(connection, existing["id"], existing["mode"], existing["scenario_id"], existing["difficulty"]) if existing["outcome"] == "success" else None
+            rank = _community_rank(connection, existing["id"], existing["mode"], existing["scenario_id"], existing["difficulty"], existing["record_type"]) if existing["outcome"] == "success" else None
             return {"id": existing["id"], "verified": bool(existing["verified"]), "verificationStatus": existing["verification_status"], "eligible": bool(rank and rank <= 10), "communityRank": rank if rank and rank <= 10 else None, "rank": rank if rank and rank <= 10 else None, "reason": "ALREADY SAVED · PUBLISHED COMMUNITY" if rank and rank <= 10 else "ALREADY SAVED · NOT IN TOP 10", "duplicate": True}
         server_id = str(uuid.uuid4())
         connection.execute("""INSERT INTO flights
@@ -225,7 +226,7 @@ def submit_flight(payload: FlightSubmission):
              ((payload.flightRecord.get("report") or {}).get("touchdown") or {}).get("fuel") if payload.flightRecord else None,
              record_json))
         connection.commit()
-        community_rank = _community_rank(connection, server_id, payload.mode, payload.scenarioId, payload.difficulty) if payload.outcome == "success" else None
+        community_rank = _community_rank(connection, server_id, payload.mode, payload.scenarioId, payload.difficulty, "flight") if payload.outcome == "success" else None
         return {"id": server_id, "verified": False, "verificationStatus": "unverified", "eligible": bool(community_rank and community_rank <= 10), "communityRank": community_rank if community_rank and community_rank <= 10 else None, "rank": community_rank if community_rank and community_rank <= 10 else None, "reason": "PUBLISHED COMMUNITY" if community_rank and community_rank <= 10 else "SERVER CONFIRMED · NOT IN COMMUNITY TOP 10", "duplicate": False}
     finally:
         connection.close()
