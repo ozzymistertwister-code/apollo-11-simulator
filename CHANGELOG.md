@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.0 — local Part 1 checkpoint — 2026-10-09
+
+- Added a fixed-simulation-time Flight Recorder for complete missions.
+- Added grouped control, warning, terrain, touchdown, and mission lifecycle events.
+- Added IndexedDB storage for the 20 most recent completed flights with graceful unavailable-storage handling.
+- Added full JSON and telemetry CSV export from the recorder panel.
+- Added seven recorder tests covering timing, event grouping, finite data, export, retention, physics isolation, and IndexedDB fallback.
+
 ## v1.3.1 — 2026-10-09
 
 - Increased explicit gameplay-scale terrain relief so hills, depressions, and slopes remain legible on mobile screens.

@@ -18,7 +18,9 @@ npm test
 npm run build
 ```
 
-Version `1.3.1` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.0, with more legible gameplay-scale relief and profile-following crater rendering. Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md) and [TERRAIN.md](TERRAIN.md).
+Version `1.4.0` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.1 and adds a local Flight Recorder. A completed mission records fixed-step telemetry and grouped pilot events, persists the last 20 completed flights in IndexedDB, and can export JSON or CSV from the recorder panel. See [FLIGHT_RECORDER.md](FLIGHT_RECORDER.md) for the versioned format and storage policy.
+
+Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md) and [TERRAIN.md](TERRAIN.md).
 
 Engineering Mode also provides optional `LANDING ASSIST` markers, terrain slope/zone/drift telemetry, and a `PREDICTED TOUCHDOWN` estimate assuming current throttle and attitude are held. The estimate is read-only and reports `UNAVAILABLE` outside the modeled envelope.
 

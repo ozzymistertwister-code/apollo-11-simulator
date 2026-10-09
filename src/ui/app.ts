@@ -3,6 +3,8 @@ import type { FlightMode } from '../config/physics';
 import { assessLandingZone, targetOffset } from '../simulation/landing-guidance';
 import { predictTouchdown } from '../simulation/touchdown-prediction';
 import { scenarioById, SCENARIOS, type ScenarioId } from '../simulation/scenarios';
+import { IndexedDbFlightRecordStore } from '../recording/flight-storage';
+import { exportFlightCsv, exportFlightJson } from '../recording/flight-export';
 import { bindControls } from '../controls/controls';
 import { Renderer } from '../rendering/renderer';
 import { bindTouchControl, type TouchAction } from '../controls/touch';
@@ -100,7 +102,7 @@ guidanceDetails.open = true;
 guidanceDetails.innerHTML = '<summary>PRECISION LANDING</summary><div class="guidance-grid"><button type="button" id="landing-assist">LANDING ASSIST: ON</button><span>TERRAIN SLOPE <b id="terrain-slope">—</b></span><span>LANDING ZONE <b id="landing-zone">—</b></span><span>HORIZONTAL DRIFT <b id="horizontal-drift">—</b></span><span>TARGET OFFSET <b id="target-offset">—</b></span><span class="prediction-wide">PREDICTED TOUCHDOWN <b id="predicted-touchdown">UNAVAILABLE</b></span><small id="prediction-assumption"></small></div>';
 document.querySelector('.telemetry')?.append(guidanceDetails);
 const landingAssistButton = guidanceDetails.querySelector<HTMLButtonElement>('#landing-assist');
-landingAssistButton?.addEventListener('click', () => { landingAssistEnabled = !landingAssistEnabled; landingAssistButton.textContent = `LANDING ASSIST: ${landingAssistEnabled ? 'ON' : 'OFF'}`; });
+landingAssistButton?.addEventListener('click', () => { landingAssistEnabled = !landingAssistEnabled; landingAssistButton.textContent = `LANDING ASSIST: ${landingAssistEnabled ? 'ON' : 'OFF'}`; mission.recordLandingAssist(landingAssistEnabled); });
 const updatePrecisionGuidance = () => {
   const terrain = mission.terrain;
   renderer.setTerrain(terrain);
@@ -119,6 +121,24 @@ const updatePrecisionGuidance = () => {
   $('prediction-assumption').textContent = prediction.available ? prediction.assumedControls : 'Prediction unavailable outside the modeled terrain envelope.';
 };
 window.setInterval(updatePrecisionGuidance, 250);
+
+const recordStore = new IndexedDbFlightRecordStore();
+let lastSavedFlightId: string | undefined;
+let storedRecord: import('../recording/types').FlightRecord | undefined;
+const recorderPanel = document.createElement('details');
+recorderPanel.className = 'recorder-panel';
+recorderPanel.innerHTML = '<summary>FLIGHT RECORDER</summary><div class="recorder-actions"><button type="button" id="export-json" disabled>EXPORT JSON</button><button type="button" id="export-csv" disabled>EXPORT CSV</button><span id="recorder-status">0 SAVED RECORDS</span></div>';
+document.querySelector('.telemetry')?.append(recorderPanel);
+const recorderStatus = recorderPanel.querySelector<HTMLElement>('#recorder-status')!;
+const exportJsonButton = recorderPanel.querySelector<HTMLButtonElement>('#export-json')!;
+const exportCsvButton = recorderPanel.querySelector<HTMLButtonElement>('#export-csv')!;
+const download = (name: string, content: string, type: string) => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type })); link.download = name; link.click(); URL.revokeObjectURL(link.href); };
+const currentRecord = () => mission.state.flightRecord ?? storedRecord;
+exportJsonButton.addEventListener('click', () => { const record = currentRecord(); if (record) download(`${record.id}.json`, exportFlightJson(record), 'application/json'); });
+exportCsvButton.addEventListener('click', () => { const record = currentRecord(); if (record) download(`${record.id}.csv`, exportFlightCsv(record), 'text/csv'); });
+const refreshRecorderStatus = async () => { try { const records = await recordStore.list(20); storedRecord = records[0]; const hasRecord = Boolean(currentRecord()); exportJsonButton.disabled = !hasRecord; exportCsvButton.disabled = !hasRecord; recorderStatus.textContent = `${records.length} SAVED RECORD${records.length === 1 ? '' : 'S'} · INDEXEDDB`; } catch { recorderStatus.textContent = 'STORAGE UNAVAILABLE'; } };
+void refreshRecorderStatus();
+window.setInterval(() => { const record = currentRecord(); if (!record || lastSavedFlightId === record.id) return; lastSavedFlightId = record.id; recordStore.save(record).then(() => { exportJsonButton.disabled = false; exportCsvButton.disabled = false; void refreshRecorderStatus(); }).catch(() => { recorderStatus.textContent = 'SAVE FAILED · STORAGE LIMIT OR UNAVAILABLE'; }); }, 250);
 
 const scenarioPicker = document.createElement('label');
 scenarioPicker.className = 'scenario-picker mode-picker';

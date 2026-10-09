@@ -50,3 +50,9 @@
 @media (max-width: 720px) { .guidance-details { margin-top: 16px; } .guidance-grid { gap: 8px 10px; font-size: 9px; } }
 html { touch-action: manipulation; }
 body { overflow-x: hidden; }
+.recorder-panel { margin-top: 18px; border-top: 1px solid #26343b; padding-top: 15px; font: 10px 'IBM Plex Mono', monospace; color: #83949b; }
+.recorder-panel summary { cursor: pointer; letter-spacing: .12em; color: #9aacb0; }
+.recorder-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 12px; align-items: center; }
+.recorder-actions button { padding: 8px 6px; border: 1px solid #52666c; background: #101a20; color: #68c5b1; font: 9px 'IBM Plex Mono', monospace; }
+.recorder-actions button:disabled { color: #52666c; cursor: not-allowed; }
+.recorder-actions span { grid-column: 1 / -1; color: #71828a; }

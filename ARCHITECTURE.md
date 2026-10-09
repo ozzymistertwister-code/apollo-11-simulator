@@ -10,6 +10,7 @@ The simulator is split into small modules so a future guidance computer adapter 
 - `src/rendering/camera.ts` — bounded, smoothed camera tracking and zoom.
 - `src/controls/` — keyboard bindings and held-input handling.
 - `src/ui/` — DOM shell, telemetry, overlays, and responsive presentation.
+- `src/recording/` — versioned flight records, fixed-simulation-time sampling, event grouping, IndexedDB persistence, and JSON/CSV export. This boundary consumes immutable snapshots from `Mission`; it does not step or mutate physics.
 - `tests/` — Vitest physics contract.
 
 The engine uses metres, seconds, kilograms, and radians internally. `Mission.tick()` accumulates frame time and consumes fixed 1/60 second slices, keeping outcomes independent of display refresh rate. Thrust is a force in newtons; vertical acceleration is `thrust.y / mass - lunarGravity`. Fuel burn is proportional to throttle and time, and an empty tank disables thrust.
@@ -25,3 +26,5 @@ In v1.2.0 `Mission` selects Classic or Engineering parameters without changing m
 In v1.3.0 Engineering owns a seeded `LunarTerrain`; Renderer receives the same terrain instance, so displayed terrain and collision geometry cannot diverge. The simplified LM landing gear uses two effective contact points at ±2.4 m horizontally and 2.4 m below the craft reference point. Classic intentionally keeps the previous flat-ground contact path. Surface outcomes are `SAFE LANDING`, `HARD LANDING`, `UNSTABLE LANDING`, `TIP-OVER`, or `CRASH`.
 
 Precision guidance is read-only: `landing-guidance.ts` classifies the current zone, `touchdown-prediction.ts` simulates fixed steps while holding current throttle and attitude, and `camera.ts` smooths horizontal tracking plus bounded zoom (`0.78–1.30`). Landing Assist only toggles markers; it never changes Mission state or engine commands. The compact mobile panel uses native `<details>` and preserves pointer capture/tap-hold controls.
+
+In v1.4.0 `FlightRecorder` is called from the fixed-step `Mission` loop, not from Canvas rendering. It samples at 10 Hz of simulation time, records event transitions rather than held-button frames, and freezes a complete record only when the mission ends. `IndexedDbFlightRecordStore` is an adapter behind the storage interface; a memory adapter is used in pure tests and no server or authentication is required.
