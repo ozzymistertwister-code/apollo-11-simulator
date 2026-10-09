@@ -14,6 +14,8 @@ The production database is `/var/lib/apollo-11-simulator/flights.sqlite3`. The `
 - `GET /apollo/api/leaderboard` — returns at most ten official entries. Filters are `mode`, `scenarioId`, and `difficulty`; the UI defaults to Engineering.
 - `GET /apollo/api/flights/:id` — returns the public summary and stored FlightRecord when available for details and Replay.
 
+The UI publishes only after an explicit `SAVE TO HALL OF FAME` action. It reads the returned public record after POST; a message is not shown as saved until that read succeeds. Unverified submissions return `SERVER CONFIRMED · PENDING VERIFICATION · NOT IN TOP 10`, which explains why they are stored but absent from the official list.
+
 Nginx applies the existing `syst8m_chat_limit` rate limit, a 32 KiB request limit, and short proxy timeouts. The API rejects unknown fields, invalid callsigns, invalid enums, non-finite numbers, metadata mismatches, non-monotonic or oversized telemetry, and outcome mismatches.
 
 ## Ranking rules

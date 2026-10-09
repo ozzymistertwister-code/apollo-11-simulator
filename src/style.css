@@ -119,6 +119,13 @@ body { overflow-x: hidden; }
 .hall-detail-actions button:disabled { color: #52666c; }
 .hall-detail > small { display: block; padding-top: 9px; color: #71828a; }
 .hall-empty { color: #71828a; line-height: 1.5; margin: 10px 0 0; }
+.publish-panel { display: grid; gap: 8px; margin-top: 20px; padding-top: 18px; border-top: 1px solid #34474d; font: 10px 'IBM Plex Mono', monospace; color: #9aacb0; }
+.publish-panel strong { color: #f4a900; letter-spacing: .08em; }
+.publish-panel input:not([type="checkbox"]) { width: 100%; border: 1px solid #52666c; background: #101a20; color: #d7e1df; font: 12px 'IBM Plex Mono', monospace; padding: 9px; }
+.publish-panel .primary { margin-top: 4px; }
+.publish-panel .primary.published { background: #68c5b1; }
+.publish-panel small, .my-flight-status { color: #71828a; line-height: 1.4; }
+.my-flight-row button[data-publish-flight] { color: #f4a900; }
 .my-flight-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; border-top: 1px solid #1e3037; padding: 9px 0; color: #b9c6c8; }
 .my-flight-row span { overflow-wrap: anywhere; }
 .my-flight-row button { border: 1px solid #40565d; background: transparent; color: #68c5b1; font: 8px 'IBM Plex Mono', monospace; padding: 6px; }

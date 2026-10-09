@@ -7,6 +7,8 @@
 - Added `legacy` and `verificationStatus` metadata without deleting or rewriting historical result values.
 - Added `UNKNOWN PILOT` display and owner-only local callsign assignment for older FlightRecords; assignment does not publish or verify a record.
 - Added 2 compatibility tests; total automated coverage is now 59 tests.
+- Added explicit post-landing publication with server read-back confirmation and a visible pending-verification explanation.
+- Added retry publication for successful historical local flights without changing their original telemetry or timestamp.
 
 ## v1.4.5 — 2026-10-09
 

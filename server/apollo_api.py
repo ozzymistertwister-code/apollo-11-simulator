@@ -168,7 +168,7 @@ def submit_flight(payload: FlightSubmission):
     try:
         existing = connection.execute("SELECT * FROM flights WHERE record_id = ?", (payload.recordId,)).fetchone()
         if existing:
-            return {"id": existing["id"], "verified": bool(existing["verified"]), "duplicate": True}
+            return {"id": existing["id"], "verified": bool(existing["verified"]), "verificationStatus": existing["verification_status"], "eligible": bool(existing["verified"] and not existing["legacy"] and existing["outcome"] == "success"), "rank": None, "reason": "ALREADY SAVED · RANKING REQUIRES VERIFIED RESULT" if not existing["verified"] else "ALREADY SAVED", "duplicate": True}
         server_id = str(uuid.uuid4())
         connection.execute("""INSERT INTO flights
             (id, record_id, pilot_name, created_at, simulator_version, mode, scenario_id, terrain_seed,
@@ -189,7 +189,7 @@ def submit_flight(payload: FlightSubmission):
              ((payload.flightRecord.get("report") or {}).get("touchdown") or {}).get("fuel") if payload.flightRecord else None,
              record_json))
         connection.commit()
-        return {"id": server_id, "verified": False, "duplicate": False}
+        return {"id": server_id, "verified": False, "verificationStatus": "unverified", "eligible": False, "rank": None, "reason": "SERVER CONFIRMED · PENDING VERIFICATION · NOT IN TOP 10", "duplicate": False}
     finally:
         connection.close()
 

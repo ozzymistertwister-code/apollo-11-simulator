@@ -74,13 +74,15 @@ export async function publicFlightSummary(record: FlightRecord, identity: PilotI
   };
 }
 
-export async function submitPublicFlight(record: FlightRecord, identity: PilotIdentity, fetcher: typeof fetch = fetch): Promise<{ id: string; verified: boolean; duplicate?: boolean }> {
+export type PublicSubmissionResult = Readonly<{ id: string; verified: boolean; duplicate?: boolean; verificationStatus?: 'unverified' | 'verified' | 'rejected'; eligible?: boolean; rank?: number | null; reason?: string }>;
+
+export async function submitPublicFlight(record: FlightRecord, identity: PilotIdentity, fetcher: typeof fetch = fetch): Promise<PublicSubmissionResult> {
   const response = await fetcher('/apollo/api/flights', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await publicFlightSummary(record, identity)) });
   if (!response.ok) throw new Error(`Flight submission failed (${response.status})`);
   return response.json() as Promise<{ id: string; verified: boolean; duplicate?: boolean }>;
 }
 
-export async function fetchLeaderboard(filters: { mode?: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' } = {}, fetcher: typeof fetch = fetch): Promise<{ entries: PublicFlightSummary[]; pending: PublicFlightSummary[] }> {
+export async function fetchLeaderboard(filters: { mode?: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' } = {}, fetcher: typeof fetch = fetch): Promise<{ entries: PublicFlightSummary[]; pending: PublicFlightSummary[]; pendingCount?: number }> {
   const query = new URLSearchParams({ include_pending: 'false' });
   if (filters.mode) query.set('mode', filters.mode);
   if (filters.scenarioId) query.set('scenarioId', filters.scenarioId);
