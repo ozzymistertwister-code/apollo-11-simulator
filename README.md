@@ -18,4 +18,4 @@ npm test
 npm run build
 ```
 
-Version `1.0.0` uses clearly marked gameplay assumptions in `src/config/physics.ts`, not exact historical Apollo 11 specifications. See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [CHANGELOG.md](CHANGELOG.md).
+Version `1.0.1` uses clearly marked gameplay assumptions in `src/config/physics.ts`, not exact historical Apollo 11 specifications. Mission Report preserves interpolated touchdown telemetry before contact damping. See [ARCHITECTURE.md](ARCHITECTURE.md), [ROADMAP.md](ROADMAP.md), and [CHANGELOG.md](CHANGELOG.md).

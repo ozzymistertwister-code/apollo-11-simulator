@@ -42,3 +42,20 @@ const updateMobileIndicators = () => {
   if (fuelState) fuelState.textContent = craft.fuel <= 0 ? 'EMPTY' : craft.fuel < 1000 ? 'LOW' : 'TANK OK';
 };
 window.setInterval(updateMobileIndicators, 100);
+
+const reportCard = resultModal.querySelector<HTMLElement>('.modal-card');
+reportCard?.insertAdjacentHTML('beforeend', '<div class="touchdown-report"><div><span>LANDING GRADE</span><b id="landing-grade">—</b></div><div><span>TOUCHDOWN H / SPEED</span><b id="landing-hspeed">—</b></div><div><span>TOUCHDOWN ANGLE</span><b id="landing-angle">—</b></div><div><span>FUEL REMAINING</span><b id="landing-fuel">—</b></div><div class="report-wide"><span>MODULE CONDITION</span><b id="landing-condition">—</b></div></div>');
+const updateLandingReport = () => {
+  const { touchdown, assessment } = mission.state;
+  if (!touchdown || !assessment) return;
+  $('result-title').textContent = `Grade ${assessment.grade}`;
+  $('result-copy').textContent = assessment.summary;
+  $('result-time').textContent = formatTime(touchdown.flightTime);
+  $('result-vspeed').textContent = `${touchdown.verticalSpeed >= 0 ? '+' : '−'}${Math.abs(touchdown.verticalSpeed).toFixed(1)} m/s`;
+  $('landing-grade').textContent = assessment.grade;
+  $('landing-hspeed').textContent = `${touchdown.horizontalSpeed >= 0 ? '+' : '−'}${Math.abs(touchdown.horizontalSpeed).toFixed(1)} m/s`;
+  $('landing-angle').textContent = `${(Math.abs(touchdown.angle) * 180 / Math.PI).toFixed(1)}°`;
+  $('landing-fuel').textContent = `${Math.round(touchdown.fuel).toLocaleString()} kg`;
+  $('landing-condition').textContent = assessment.condition;
+};
+window.setInterval(updateLandingReport, 100);

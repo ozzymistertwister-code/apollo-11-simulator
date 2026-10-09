@@ -18,6 +18,11 @@ export const PHYSICS = {
   hardHorizontalSpeed: 5,
   hardTilt: Math.PI / 6,
   criticalTilt: Math.PI / 3,
+  excellentVerticalSpeed: 1,
+  excellentHorizontalSpeed: 1,
+  excellentTilt: 5 * Math.PI / 180,
+  criticalVerticalSpeed: 11,
+  criticalHorizontalSpeed: 10,
   maxSimulationTime: 900
 } as const;
 

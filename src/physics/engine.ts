@@ -1,5 +1,5 @@
 import { PHYSICS, type PhysicsConfig } from '../config/physics';
-import type { CraftState, LandingOutcome, Vector } from './types';
+import type { CraftState, LandingAssessment, LandingOutcome, TouchdownTelemetry, Vector } from './types';
 
 export const initialCraft = (config: PhysicsConfig = PHYSICS): CraftState => ({
   position: { x: 0, y: config.initialAltitude },
@@ -38,6 +38,41 @@ export function classifyLanding(craft: CraftState, config: PhysicsConfig = PHYSI
   if (vertical <= config.softVerticalSpeed && horizontal <= config.softHorizontalSpeed && tilt <= config.hardTilt) return 'success';
   if (vertical <= config.hardVerticalSpeed && horizontal <= config.hardHorizontalSpeed && tilt <= config.hardTilt) return 'hard';
   return 'crash';
+}
+
+export function captureTouchdown(before: CraftState, after: CraftState, beforeTime: number, dt: number, terrainHeight = PHYSICS.terrainBase): TouchdownTelemetry {
+  const travel = before.position.y - after.position.y;
+  const alpha = travel > 0 ? Math.min(1, Math.max(0, (before.position.y - terrainHeight) / travel)) : 1;
+  const lerp = (a: number, b: number) => a + (b - a) * alpha;
+  const velocity = { x: lerp(before.velocity.x, after.velocity.x), y: lerp(before.velocity.y, after.velocity.y) };
+  return Object.freeze({
+    verticalSpeed: velocity.y,
+    horizontalSpeed: velocity.x,
+    totalSpeed: Math.hypot(velocity.x, velocity.y),
+    angle: lerp(before.angle, after.angle),
+    fuel: lerp(before.fuel, after.fuel),
+    flightTime: beforeTime + dt * alpha,
+    position: Object.freeze({ x: lerp(before.position.x, after.position.x), y: terrainHeight })
+  });
+}
+
+export function assessLanding(telemetry: TouchdownTelemetry, config: PhysicsConfig = PHYSICS): LandingAssessment {
+  const vertical = Math.abs(telemetry.verticalSpeed);
+  const horizontal = Math.abs(telemetry.horizontalSpeed);
+  const tilt = Math.abs(telemetry.angle);
+  if (vertical <= config.excellentVerticalSpeed && horizontal <= config.excellentHorizontalSpeed && tilt <= config.excellentTilt) {
+    return { grade: 'A+', condition: 'Intact', outcome: 'success', summary: 'Excellent touchdown. Guidance reports a very soft, stable landing.' };
+  }
+  if (vertical <= config.softVerticalSpeed && horizontal <= config.softHorizontalSpeed && tilt <= config.hardTilt) {
+    return { grade: 'A', condition: 'Intact', outcome: 'success', summary: 'Safe touchdown. The module is stable within the playable landing envelope.' };
+  }
+  if (vertical <= config.hardVerticalSpeed && horizontal <= config.hardHorizontalSpeed && tilt <= config.hardTilt) {
+    return { grade: 'B', condition: 'Minor Damage', outcome: 'hard', summary: 'Hard touchdown. The module landed, but the landing gear may be damaged.' };
+  }
+  if (vertical <= config.criticalVerticalSpeed && horizontal <= config.criticalHorizontalSpeed && tilt <= config.criticalTilt) {
+    return { grade: 'C', condition: 'Major Damage', outcome: 'crash', summary: 'Critical touchdown. The module reached the surface with serious damage.' };
+  }
+  return { grade: 'F', condition: 'Destroyed', outcome: 'crash', summary: 'Crash. The landing exceeded the playable survival envelope.' };
 }
 
 export function resolveTerrainContact(craft: CraftState, terrainHeight = PHYSICS.terrainBase): CraftState {

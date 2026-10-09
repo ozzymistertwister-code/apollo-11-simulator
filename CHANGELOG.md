@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.1 — 2026-10-09
+
+- Preserved interpolated pre-contact speed, angle, fuel, time, and position in immutable `TouchdownTelemetry`.
+- Added A+ / A / B / C / F landing grades and bounded module-condition summaries.
+- Updated Mission Report to show actual touchdown telemetry instead of post-contact zero velocity.
+- Added deterministic tests for touchdown capture, grading axes, reset behaviour, and repeatability.
+
 ## v1.0.0 — 2026-10-09
 
 - Fixed mobile throttle controls so `+` and `−` change the engine throttle, not velocity directly.

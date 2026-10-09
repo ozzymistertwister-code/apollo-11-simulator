@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PHYSICS } from '../src/config/physics';
-import { classifyLanding, initialCraft, stepPhysics, thrustVector } from '../src/physics/engine';
+import { assessLanding, captureTouchdown, classifyLanding, initialCraft, stepPhysics, thrustVector } from '../src/physics/engine';
+import { Mission } from '../src/simulation/mission';
 
 describe('lunar physics', () => {
   it('accelerates downward under lunar gravity without thrust', () => { const next = stepPhysics(initialCraft(), 1); expect(next.velocity.y).toBeCloseTo(-6.62, 2); });
@@ -12,4 +13,10 @@ describe('lunar physics', () => {
   it('is stable across frame rates through fixed steps', () => { let a = initialCraft(); let b = initialCraft(); for (let i = 0; i < 60; i++) a = stepPhysics(a, 1 / 60); for (let i = 0; i < 30; i++) b = stepPhysics(b, 1 / 30); expect(a.position.y).toBeCloseTo(b.position.y, 1); });
   it('classifies safe, hard and catastrophic landings', () => { expect(classifyLanding({ ...initialCraft(), velocity: { x: 1, y: -1 }, angle: 0 })).toBe('success'); expect(classifyLanding({ ...initialCraft(), velocity: { x: 3, y: -4 }, angle: 0 })).toBe('hard'); expect(classifyLanding({ ...initialCraft(), velocity: { x: 0, y: -20 }, angle: 0 })).toBe('crash'); });
   it('never leaves craft below terrain after contact resolution', () => { const craft = { ...initialCraft(), position: { x: 0, y: -10 } }; expect((craft.position.y <= PHYSICS.terrainBase)).toBe(true); });
+  it('preserves interpolated touchdown speed before contact resolution', () => { const before = { ...initialCraft(), position: { x: 4, y: 0.05 }, velocity: { x: 2, y: -1.2 }, fuel: 4000 }; const after = { ...before, position: { x: 4.02, y: -0.05 }, velocity: { x: 2.2, y: -1.4 }, fuel: 3999 }; const touchdown = captureTouchdown(before, after, 101, 0.1); expect(touchdown.verticalSpeed).toBeCloseTo(-1.3, 5); expect(touchdown.horizontalSpeed).toBeCloseTo(2.1, 5); expect(touchdown.flightTime).toBeCloseTo(101.05, 5); expect(touchdown.position.y).toBe(0); });
+  it('grades a very soft upright touchdown A+', () => { const assessment = assessLanding({ verticalSpeed: -0.4, horizontalSpeed: 0.3, totalSpeed: 0.5, angle: 0.02, fuel: 3000, flightTime: 10, position: { x: 0, y: 0 } }); expect(assessment.grade).toBe('A+'); expect(assessment.condition).toBe('Intact'); });
+  it('uses all touchdown axes and does not grade a hard landing A+', () => { const assessment = assessLanding({ verticalSpeed: -2, horizontalSpeed: 4, totalSpeed: 4.47, angle: 0, fuel: 3000, flightTime: 10, position: { x: 0, y: 0 } }); expect(assessment.grade).toBe('B'); expect(assessment.grade).not.toBe('A+'); });
+  it('classifies a critical and a crash touchdown', () => { expect(assessLanding({ verticalSpeed: -8, horizontalSpeed: 7, totalSpeed: 10.63, angle: 0.4, fuel: 1000, flightTime: 10, position: { x: 0, y: 0 } }).grade).toBe('C'); expect(assessLanding({ verticalSpeed: -20, horizontalSpeed: 0, totalSpeed: 20, angle: 0, fuel: 0, flightTime: 10, position: { x: 0, y: 0 } }).grade).toBe('F'); });
+  it('stores one touchdown result and clears it on reset', () => { const mission = new Mission(); mission.state = { ...mission.state, status: 'active', craft: { ...initialCraft(), position: { x: 0, y: 0.01 }, velocity: { x: 0, y: -1.2 } } }; mission.tick(PHYSICS.fixedStep); expect(mission.state.touchdown?.verticalSpeed).toBeLessThan(0); const first = mission.state.touchdown; mission.tick(1); expect(mission.state.touchdown).toBe(first); mission.reset(); expect(mission.state.touchdown).toBeUndefined(); expect(mission.state.assessment).toBeUndefined(); });
+  it('returns deterministic results for identical touchdown inputs', () => { const input = { verticalSpeed: -1.2, horizontalSpeed: 0.8, totalSpeed: 1.44, angle: 0.03, fuel: 2000, flightTime: 42, position: { x: 12, y: 0 } }; expect(assessLanding(input)).toEqual(assessLanding({ ...input, position: { ...input.position } })); });
 });

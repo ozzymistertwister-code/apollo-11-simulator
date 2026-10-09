@@ -10,3 +10,9 @@
  .touch-controls output { display: grid; place-items: center; min-height: 48px; border: 1px solid #f4a900; color: #f4a900; background: rgba(10,18,24,.84); font: 600 18px 'IBM Plex Mono', monospace; }
  .engine-state, .fuel-state { display: block; margin-top: 8px; font: 9px 'IBM Plex Mono', monospace; letter-spacing: .1em; color: #68c5b1; }
  .fuel-state { margin-top: 4px; color: #83949b; }
+ .touchdown-report { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; border-top: 1px solid #34474d; margin-top: 20px; padding-top: 18px; font: 10px 'IBM Plex Mono', monospace; }
+ .touchdown-report div { min-width: 0; }
+ .touchdown-report span { display: block; color: #83949b; letter-spacing: .08em; }
+ .touchdown-report b { display: block; margin-top: 5px; color: #f4a900; font-weight: 500; }
+ .touchdown-report .report-wide { grid-column: 1 / -1; }
+ @media (max-width: 420px) { .touchdown-report { gap: 10px; font-size: 9px; } }

@@ -1,9 +1,9 @@
 import { PHYSICS } from '../config/physics';
-import { classifyLanding, initialCraft, resolveTerrainContact, stepPhysics } from '../physics/engine';
-import type { CraftState, LandingOutcome } from '../physics/types';
+import { assessLanding, captureTouchdown, initialCraft, resolveTerrainContact, stepPhysics } from '../physics/engine';
+import type { CraftState, LandingAssessment, LandingOutcome, TouchdownTelemetry } from '../physics/types';
 
 export type MissionStatus = 'ready' | 'active' | 'paused' | 'complete';
-export type MissionState = { craft: CraftState; time: number; status: MissionStatus; outcome?: LandingOutcome };
+export type MissionState = { craft: CraftState; time: number; status: MissionStatus; outcome?: LandingOutcome; touchdown?: TouchdownTelemetry; assessment?: LandingAssessment };
 
 export class Mission {
   state: MissionState = { craft: initialCraft(), time: 0, status: 'ready' };
@@ -19,12 +19,17 @@ export class Mission {
     if (this.state.status !== 'active') return;
     this.accumulator += Math.min(frameDelta, 0.25);
     while (this.accumulator >= PHYSICS.fixedStep) {
-      this.state.craft = stepPhysics(this.state.craft, PHYSICS.fixedStep);
+      const before = this.state.craft;
+      const beforeTime = this.state.time;
+      const next = stepPhysics(before, PHYSICS.fixedStep);
+      this.state.craft = next;
       this.state.time += PHYSICS.fixedStep;
       this.accumulator -= PHYSICS.fixedStep;
       if (this.state.craft.position.y <= PHYSICS.terrainBase) {
+        this.state.touchdown = captureTouchdown(before, next, beforeTime, PHYSICS.fixedStep);
+        this.state.assessment = assessLanding(this.state.touchdown);
         this.state.craft = resolveTerrainContact(this.state.craft);
-        this.state.outcome = classifyLanding(this.state.craft);
+        this.state.outcome = this.state.assessment.outcome;
         this.state.status = 'complete';
         break;
       }
