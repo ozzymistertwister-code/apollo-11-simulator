@@ -24,7 +24,7 @@
 - Added selectable altitude, velocity, thrust, fuel, attitude, and acceleration charts plus telemetry-derived landing analytics.
 - Added two-flight comparison with same-condition detection, mismatch warning, and isolated record deletion.
 - Completed for v1.4.0: final automated QA, versioned documentation, GitHub tag, and release.
-- Pending external deployment: the repository contains no server deploy command, hosting manifest, or deployment credential for syst8m.com; production must be updated through the site's existing administrator-controlled mechanism.
+- Published to `https://syst8m.com/apollo/` through the existing `anker` VPS SSH deployment path. The current `/apollo/` directory is backed up before replacement; nginx configuration and other sites are untouched.
 
 - **v0.2** — richer lunar terrain, crater generation, lighting, dust, and camera composition.
 - **v0.3** — historical Apollo 11 descent scenarios with documented timelines.

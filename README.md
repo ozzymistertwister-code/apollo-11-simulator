@@ -26,4 +26,6 @@ Engineering Mode also provides optional `LANDING ASSIST` markers, terrain slope/
 
 The `FLIGHT HISTORY // REPLAY & ANALYTICS` panel opens completed local records without interrupting an active mission. Replay uses recorded coordinates and attitude with 0.5×–4× playback, a touch-friendly timeline, event markers, seven selectable telemetry graphs, derived landing metrics, and two-flight comparison warnings for different initial conditions.
 
+The v1.4.0 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement.
+
 Select one of the five seeded scenarios before launch. Restart repeats the selected scenario. The Mission Report includes Flight Performance, Landing Site Assessment, and Mission Result sections, including a precision grade that does not reward an unsafe site. See [TERRAIN.md](TERRAIN.md) for the generation and coordinate model.

@@ -12,7 +12,7 @@
 - Added telemetry charts with selectable signals and derived mission analytics.
 - Added two-flight comparison with compatibility warnings and isolated deletion of saved records.
 - Added replay, analytics, and storage deletion tests.
-- GitHub Release `v1.4.0` created after automated QA; syst8m.com deployment remains pending external server access.
+- Published v1.4.0 to `https://syst8m.com/apollo/` after backup and production resource verification.
 
 ## v1.3.1 — 2026-10-09
 
