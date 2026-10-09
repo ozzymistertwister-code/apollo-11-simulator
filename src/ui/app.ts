@@ -8,6 +8,7 @@ import { exportFlightCsv, exportFlightJson } from '../recording/flight-export';
 import { FlightReplay, replayEventMarkers } from '../recording/flight-replay';
 import { analyzeFlight, comparableFlights, type FlightAnalytics } from '../recording/flight-analytics';
 import type { FlightRecord } from '../recording/types';
+import { assignLegacyPilotName, enrichCompletedRecord, isLegacyRecord, pilotNameForRecord } from '../recording/record-metadata';
 import { loadPilotName, normalizePilotName, savePilotName, validatePilotName, type PilotIdentity } from '../pilot/pilot-identity';
 import { fetchLeaderboard, fetchPublicFlight, submitPublicFlight } from '../online/flight-api';
 import { filterHallOfFame, sortHallOfFame } from '../online/hall-of-fame';
@@ -136,7 +137,7 @@ const updateFuelReport = () => {
 };
 window.setInterval(updateFuelReport, 100);
 const footerVersion = document.querySelector<HTMLElement>('.footer span:nth-child(2)');
-if (footerVersion) footerVersion.textContent = 'APOLLO 11 // v1.4.5 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
+if (footerVersion) footerVersion.textContent = 'APOLLO 11 // v1.4.6 · GAME VALUES, NOT HISTORICAL FLIGHT DATA';
 const keyboardStep = bindControls(() => mission, () => mission.pause(), () => reset());
 window.setInterval(keyboardStep, 1000 / 60);
 window.setInterval(() => renderer.setTerrain(mission.terrain), 100);
@@ -188,7 +189,7 @@ exportJsonButton.addEventListener('click', () => { const record = currentRecord(
 exportCsvButton.addEventListener('click', () => { const record = currentRecord(); if (record) download(`${record.id}.csv`, exportFlightCsv(record), 'text/csv'); });
 const refreshRecorderStatus = async () => { try { const records = await recordStore.list(20); storedRecord = records[0]; const hasRecord = Boolean(currentRecord()); exportJsonButton.disabled = !hasRecord; exportCsvButton.disabled = !hasRecord; recorderStatus.textContent = `${records.length} SAVED RECORD${records.length === 1 ? '' : 'S'} · INDEXEDDB`; } catch { recorderStatus.textContent = 'STORAGE UNAVAILABLE'; } };
 void refreshRecorderStatus();
-window.setInterval(() => { const record = currentRecord(); if (!record || lastSavedFlightId === record.id) return; lastSavedFlightId = record.id; recordStore.save(record).then(async () => { exportJsonButton.disabled = false; exportCsvButton.disabled = false; void refreshRecorderStatus(); if (mission.state.flightRecord?.id === record.id && pilotIdentity?.publicConsent && !submittedFlightIds.has(record.id)) { try { const result = await submitPublicFlight(record, pilotIdentity); markSubmitted(record.id); recorderStatus.textContent = result.verified ? 'SUBMITTED · VERIFIED' : 'SUBMITTED · PENDING VERIFICATION'; } catch { recorderStatus.textContent = 'LOCAL SAVE OK · SERVER UNAVAILABLE'; } } }).catch(() => { recorderStatus.textContent = 'SAVE FAILED · STORAGE LIMIT OR UNAVAILABLE'; }); }, 250);
+window.setInterval(() => { const record = currentRecord(); if (!record || lastSavedFlightId === record.id) return; lastSavedFlightId = record.id; const persistedRecord = enrichCompletedRecord(record, pilotIdentity); recordStore.save(persistedRecord).then(async () => { exportJsonButton.disabled = false; exportCsvButton.disabled = false; void refreshRecorderStatus(); if (mission.state.flightRecord?.id === record.id && pilotIdentity?.publicConsent && !submittedFlightIds.has(record.id)) { try { const result = await submitPublicFlight(persistedRecord, pilotIdentity); markSubmitted(record.id); recorderStatus.textContent = result.verified ? 'SUBMITTED · VERIFIED' : 'SUBMITTED · PENDING VERIFICATION'; } catch { recorderStatus.textContent = 'LOCAL SAVE OK · SERVER UNAVAILABLE'; } } }).catch(() => { recorderStatus.textContent = 'SAVE FAILED · STORAGE LIMIT OR UNAVAILABLE'; }); }, 250);
 
 const historyPanel = document.createElement('details');
 historyPanel.className = 'history-panel';
@@ -210,7 +211,7 @@ let activeAnalytics: FlightAnalytics | undefined;
 let selectedRecord: FlightRecord | undefined;
 let lastReplayFrame = performance.now();
 const displayValue = (value: number | null, unit = '') => value === null || !Number.isFinite(value) ? 'N/A' : `${value.toFixed(1)}${unit}`;
-const recordLabel = (record: FlightRecord) => `${new Date(record.createdAt).toLocaleString()} · ${record.mode.toUpperCase()} · ${record.scenarioId ?? 'CLASSIC'} · ${record.report.outcome.toUpperCase()}`;
+const recordLabel = (record: FlightRecord) => `${pilotNameForRecord(record)} · ${new Date(record.createdAt).toLocaleString()} · ${record.mode.toUpperCase()} · ${record.scenarioId ?? 'CLASSIC'} · ${record.report.outcome.toUpperCase()}${isLegacyRecord(record) ? ' · LEGACY' : ''}`;
 const drawReplay = () => {
   if (!activeReplay) return;
   const context = replayCanvas.getContext('2d'); if (!context) return;
@@ -275,7 +276,7 @@ myFlightsPanel.className = 'my-flights-panel';
 myFlightsPanel.innerHTML = '<summary>MY FLIGHTS // LOCAL DEVICE</summary><div id="my-flights-list">LOADING</div>';
 document.querySelector('.telemetry')?.append(myFlightsPanel);
 const myFlightsList = myFlightsPanel.querySelector<HTMLElement>('#my-flights-list')!;
-const renderMyFlights = () => { myFlightsList.innerHTML = historyRecords.length ? historyRecords.map((record) => `<div class="my-flight-row"><span>${formatPublicDate(record.createdAt)} · ${record.mode.toUpperCase()} · ${record.report.outcome.toUpperCase()}<small>${record.scenarioId ?? 'CLASSIC'} · ${submittedFlightIds.has(record.id) ? 'SUBMITTED TO RANKING' : 'LOCAL ONLY'}</small></span><button type="button" data-my-flight="${escapeHtml(record.id)}">OPEN REPLAY</button></div>`).join('') : '<p class="leaderboard-empty">No local completed flights.</p>'; myFlightsList.querySelectorAll<HTMLButtonElement>('[data-my-flight]').forEach((button) => button.addEventListener('click', () => { const record = historyRecords.find((item) => item.id === button.dataset.myFlight); if (record) { historyPanel.open = true; openReplay(record); } })); };
+const renderMyFlights = () => { myFlightsList.innerHTML = historyRecords.length ? historyRecords.map((record) => `<div class="my-flight-row"><span>${pilotNameForRecord(record)} · ${formatPublicDate(record.createdAt)} · ${record.mode.toUpperCase()} · ${record.report.outcome.toUpperCase()}<small>${record.scenarioId ?? 'CLASSIC'} · ${isLegacyRecord(record) ? 'LEGACY · NOT VERIFIED' : submittedFlightIds.has(record.id) ? 'SUBMITTED · NOT VERIFIED' : 'LOCAL ONLY'}</small></span><button type="button" data-my-flight="${escapeHtml(record.id)}">OPEN REPLAY</button>${pilotNameForRecord(record) === 'UNKNOWN PILOT' ? `<button type="button" data-set-pilot="${escapeHtml(record.id)}">SET PILOT NAME</button>` : ''}</div>`).join('') : '<p class="leaderboard-empty">No local completed flights.</p>'; myFlightsList.querySelectorAll<HTMLButtonElement>('[data-my-flight]').forEach((button) => button.addEventListener('click', () => { const record = historyRecords.find((item) => item.id === button.dataset.myFlight); if (record) { historyPanel.open = true; openReplay(record); } })); myFlightsList.querySelectorAll<HTMLButtonElement>('[data-set-pilot]').forEach((button) => button.addEventListener('click', async () => { const record = historyRecords.find((item) => item.id === button.dataset.setPilot); if (!record) return; const entered = window.prompt('PILOT NAME / CALLSIGN', ''); if (entered === null) return; const name = normalizePilotName(entered); const error = validatePilotName(name); if (error) { window.alert(error); return; } const updated = assignLegacyPilotName(record, name); await recordStore.save(updated); historyRecords = historyRecords.map((item) => item.id === updated.id ? updated : item); renderHistory(); renderMyFlights(); })); };
 renderMyFlights(); window.setInterval(renderMyFlights, 2000);
 
 const scenarioPicker = document.createElement('label');

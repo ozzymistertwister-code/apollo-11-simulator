@@ -6,7 +6,7 @@ The browser keeps the complete `FlightRecord` in IndexedDB. With explicit public
 
 ## Database
 
-The production database is `/var/lib/apollo-11-simulator/flights.sqlite3`. The `flights` table stores the server UUID, client FlightRecord ID, callsign, UTC timestamp, simulator version, mode, scenario, difficulty, outcome, grades, touchdown values, fuel values, precision/slope fields, telemetry reference/hash, bounded serialized FlightRecord, and `verified` status. No IP, email, password, or request headers are stored.
+The production database is `/var/lib/apollo-11-simulator/flights.sqlite3`. The `flights` table stores the server UUID, client FlightRecord ID, callsign, UTC timestamp, simulator version, mode, scenario, difficulty, outcome, grades, touchdown values, fuel values, precision/slope fields, telemetry reference/hash, bounded serialized FlightRecord, `legacy`, and `verification_status`. No IP, email, password, or request headers are stored.
 
 ## API
 
@@ -18,15 +18,19 @@ Nginx applies the existing `syst8m_chat_limit` rate limit, a 32 KiB request limi
 
 ## Ranking rules
 
-Official entries require `verified=true` and `outcome=success`. Among comparable mode/scenario/difficulty results, sorting is deterministic:
+Official entries require `verified=true`, `verification_status='verified'`, `legacy=0`, and `outcome='success'`. The API always separates Classic and Engineering with the `mode` filter; scenario and difficulty filters define a comparable ranking group. Sorting within that group is deterministic:
 
-1. Landing Safety Grade (`A+`, `A`, `B`, `C`, `F`);
-2. Precision Grade;
-3. Fuel Efficiency Grade;
-4. lower absolute touchdown vertical plus horizontal speed;
-5. earlier UTC timestamp, then server ID.
+1. safe completed outcome (`success` is required);
+2. Landing Safety Grade (`A+`, `A`, `B`, `C`, `F`);
+3. Precision Grade;
+4. Fuel Efficiency Grade;
+5. lower `abs(touchdown_vertical_speed) + abs(touchdown_horizontal_speed)`;
+6. earlier UTC timestamp;
+7. server UUID ascending as the final stable tie-breaker.
 
-The server currently sets browser submissions to `verified=false`. Structural validation proves that the payload is well-formed and internally consistent, but it does not independently replay the physical model or prove that a browser did not forge values. Therefore the official Top 10 can remain empty until a trusted verification workflow marks a result verified. The UI explicitly reports this state and does not claim anti-cheat protection.
+The query applies `LIMIT 10` after this ordering. It does not replace or delete other valid rows.
+
+The server currently sets browser submissions to `verified=false` and `verification_status='unverified'`. Structural validation proves that the payload is well-formed and internally consistent, but it does not independently replay the physical model or prove that a browser did not forge values. Therefore the official Top 10 can remain empty until a trusted verification workflow marks a result verified. The UI explicitly reports this state and does not claim anti-cheat protection. Records from versions before 1.4.5 are marked `legacy=1` and cannot enter the official ranking without an explicit, documented verification process.
 
 ## Telemetry and privacy
 

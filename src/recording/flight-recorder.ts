@@ -4,7 +4,7 @@ import type { CraftState } from '../physics/types';
 import type { ScenarioId } from '../simulation/scenarios';
 import type { FlightEvent, FlightEventType, FlightRecord, FlightRecordReport, FlightTelemetrySample } from './types';
 
-const VERSION = '1.4.5';
+const VERSION = '1.4.6';
 const SAMPLE_PERIOD = 0.1;
 const finite = (value: number) => Number.isFinite(value) ? value : 0;
 const id = () => globalThis.crypto?.randomUUID?.() ?? `flight-${Date.now()}-${Math.random().toString(36).slice(2)}`;

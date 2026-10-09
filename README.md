@@ -18,7 +18,7 @@ npm test
 npm run build
 ```
 
-Version `1.4.5` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.1 and adds pilot callsigns plus an optional shared-flight submission path on top of v1.4. A completed mission records fixed-step telemetry and grouped pilot events, persists the last 20 completed flights in IndexedDB, and can export JSON or CSV from the recorder panel. See [FLIGHT_RECORDER.md](FLIGHT_RECORDER.md) for the versioned format and storage policy.
+Version `1.4.6` retains the deterministic lunar terrain and two-point landing-gear contact from v1.3.1 and adds pilot callsigns plus an optional shared-flight submission path on top of v1.4. A completed mission records fixed-step telemetry and grouped pilot events, persists the last 20 completed flights in IndexedDB, and can export JSON or CSV from the recorder panel. See [FLIGHT_RECORDER.md](FLIGHT_RECORDER.md) for the versioned format and storage policy.
 
 Terrain, obstacles, safe pads, surface grades, and remaining simplifications are documented in [PHYSICS.md](PHYSICS.md) and [TERRAIN.md](TERRAIN.md).
 
@@ -30,7 +30,7 @@ The `FLIGHT HISTORY // REPLAY & ANALYTICS` panel opens completed local records w
 
 Shared leaderboard storage and its verification boundary are documented in [LEADERBOARD.md](LEADERBOARD.md). Browser submissions are structurally validated but remain unverified until a trusted server-side physics verifier is available.
 
-The v1.4.5 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement. The optional API is deployed alongside the existing FastAPI service and stores only consented public results in a dedicated SQLite database.
+The v1.4.6 production build is published at [syst8m.com/apollo](https://syst8m.com/apollo/). Production deployment is a static `/apollo/` directory update on the existing System 8 VPS; each update is backed up before replacement. The optional API is deployed alongside the existing FastAPI service and stores only consented public results in a dedicated SQLite database.
 
 On page load, the mission computer is idle and the Hall of Fame home screen appears first. `START NEW MISSION` then opens pilot, mode, and scenario selection. `FLIGHT HISTORY` and public Replay can be opened without starting a new flight; a missing or unavailable server never blocks local play.
 

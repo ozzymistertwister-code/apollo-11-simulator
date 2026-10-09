@@ -51,4 +51,8 @@ export type FlightRecord = Readonly<{
   telemetry: ReadonlyArray<FlightTelemetrySample>;
   events: ReadonlyArray<FlightEvent>;
   report: FlightRecordReport;
+  pilotName?: string;
+  publicConsent?: boolean;
+  legacy?: boolean;
+  verificationStatus?: 'unverified' | 'verified' | 'rejected';
 }>;

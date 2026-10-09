@@ -29,6 +29,8 @@ export type PublicFlightSummary = Readonly<{
   initialFuel?: number | null;
   remainingFuel?: number | null;
   verified?: boolean;
+  verificationStatus?: 'unverified' | 'verified' | 'rejected';
+  legacy?: boolean;
   createdAt?: string;
   flightRecord?: FlightRecord;
 }>;

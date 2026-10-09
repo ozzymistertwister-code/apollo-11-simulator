@@ -17,6 +17,14 @@ GRADE = Literal["A+", "A", "B", "C", "F", "D", "N/A"]
 router = APIRouter(prefix="/apollo/api", tags=["apollo"])
 
 
+def _is_legacy_version(value: str) -> bool:
+    try:
+        major, minor, patch = (int(part) for part in value.split(".", 2))
+        return (major, minor, patch) < (1, 4, 5)
+    except (TypeError, ValueError):
+        return True
+
+
 class FlightSubmission(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pilotName: str = Field(min_length=2, max_length=24)
@@ -84,6 +92,7 @@ def _connect() -> sqlite3.Connection:
         touchdown_vertical_speed REAL, touchdown_horizontal_speed REAL, touchdown_angle REAL,
         fuel_used REAL, flight_time REAL NOT NULL, telemetry_ref TEXT NOT NULL,
         telemetry_hash TEXT NOT NULL, verified INTEGER NOT NULL DEFAULT 0,
+        verification_status TEXT NOT NULL DEFAULT 'unverified', legacy INTEGER NOT NULL DEFAULT 0,
         difficulty TEXT, target_distance REAL, terrain_slope REAL,
         module_condition TEXT, initial_fuel REAL, remaining_fuel REAL,
         record_json TEXT)""")
@@ -91,10 +100,15 @@ def _connect() -> sqlite3.Connection:
     for name, definition in {
         "difficulty": "TEXT", "target_distance": "REAL", "terrain_slope": "REAL",
         "module_condition": "TEXT", "initial_fuel": "REAL", "remaining_fuel": "REAL",
+        "verification_status": "TEXT NOT NULL DEFAULT 'unverified'", "legacy": "INTEGER NOT NULL DEFAULT 0",
         "record_json": "TEXT",
     }.items():
         if name not in columns:
             connection.execute(f"ALTER TABLE flights ADD COLUMN {name} {definition}")
+    connection.execute("UPDATE flights SET verification_status = 'verified' WHERE verified = 1")
+    connection.execute("UPDATE flights SET verification_status = 'unverified' WHERE verified = 0 AND verification_status NOT IN ('unverified', 'rejected')")
+    for row in connection.execute("SELECT id, simulator_version FROM flights").fetchall():
+        connection.execute("UPDATE flights SET legacy = ? WHERE id = ?", (int(_is_legacy_version(row[1])), row[0]))
     connection.commit()
     return connection
 
@@ -112,7 +126,8 @@ def _public(row: sqlite3.Row) -> dict:
             "difficulty": row["difficulty"], "targetDistance": row["target_distance"],
             "terrainSlope": row["terrain_slope"], "moduleCondition": row["module_condition"],
             "initialFuel": row["initial_fuel"], "remainingFuel": row["remaining_fuel"],
-            "verified": bool(row["verified"])}
+            "verified": bool(row["verified"]), "verificationStatus": row["verification_status"],
+            "legacy": bool(row["legacy"])}
 
 
 def _validate_record_shape(record: dict, payload: FlightSubmission) -> None:
@@ -159,8 +174,8 @@ def submit_flight(payload: FlightSubmission):
             (id, record_id, pilot_name, created_at, simulator_version, mode, scenario_id, terrain_seed,
             outcome, safety_grade, efficiency_grade, precision_grade, touchdown_vertical_speed,
              touchdown_horizontal_speed, touchdown_angle, fuel_used, flight_time, telemetry_ref,
-             telemetry_hash, verified, difficulty, target_distance, terrain_slope, module_condition,
-             initial_fuel, remaining_fuel, record_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)""",
+            telemetry_hash, verified, verification_status, legacy, difficulty, target_distance, terrain_slope, module_condition,
+             initial_fuel, remaining_fuel, record_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'unverified', 0, ?, ?, ?, ?, ?, ?, ?)""",
             (server_id, payload.recordId, payload.pilotName, datetime.now(timezone.utc).isoformat(),
              payload.simulatorVersion, payload.mode, payload.scenarioId, payload.terrainSeed,
              payload.outcome, payload.safetyGrade, payload.efficiencyGrade, payload.precisionGrade,
@@ -183,13 +198,13 @@ def submit_flight(payload: FlightSubmission):
 def leaderboard(include_pending: bool = Query(default=False), mode: Literal["classic", "engineering"] | None = None, scenarioId: str | None = Query(default=None, max_length=64), difficulty: Literal["easy", "normal", "hard"] | None = None):
     connection = _connect()
     try:
-        clauses = ["verified = 1", "outcome = 'success'"]
+        clauses = ["verified = 1", "verification_status = 'verified'", "legacy = 0", "outcome = 'success'"]
         params: list[object] = []
         if mode: clauses.append("mode = ?"); params.append(mode)
         if scenarioId: clauses.append("scenario_id = ?"); params.append(scenarioId)
         if difficulty: clauses.append("difficulty = ?"); params.append(difficulty)
         where = " AND ".join(clauses)
-        order = "CASE safety_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE precision_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE efficiency_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, COALESCE(ABS(touchdown_vertical_speed) + ABS(touchdown_horizontal_speed), 1e9), created_at ASC"
+        order = "CASE safety_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE precision_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, CASE efficiency_grade WHEN 'A+' THEN 0 WHEN 'A' THEN 1 WHEN 'B' THEN 2 WHEN 'C' THEN 3 ELSE 4 END, COALESCE(ABS(touchdown_vertical_speed) + ABS(touchdown_horizontal_speed), 1e9), created_at ASC, id ASC"
         verified = connection.execute(f"SELECT * FROM flights WHERE {where} ORDER BY {order} LIMIT 10", params).fetchall()
         pending = connection.execute("SELECT * FROM flights WHERE verified = 0 ORDER BY created_at DESC LIMIT 20").fetchall() if include_pending else []
         pending_count = connection.execute("SELECT COUNT(*) FROM flights WHERE verified = 0").fetchone()[0]

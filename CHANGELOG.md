@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.4.6 — ranking validation and history compatibility
+
+- Updated the application and FlightRecorder version to `1.4.6`.
+- Made the Hall of Fame a database query with explicit safe-outcome, verification, legacy, comparable-condition, grade, touchdown-speed, timestamp, and UUID ordering rules.
+- Added `legacy` and `verificationStatus` metadata without deleting or rewriting historical result values.
+- Added `UNKNOWN PILOT` display and owner-only local callsign assignment for older FlightRecords; assignment does not publish or verify a record.
+- Added 2 compatibility tests; total automated coverage is now 59 tests.
+
 ## v1.4.5 — 2026-10-09
 
 - Added optional Latin/Cyrillic pilot callsign entry with local persistence and explicit public-display consent.
