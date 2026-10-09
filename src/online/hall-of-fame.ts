@@ -2,10 +2,10 @@ import type { PublicFlightSummary } from './flight-api';
 
 const gradeRank: Record<string, number> = { 'A+': 0, A: 1, B: 2, C: 3, F: 4, D: 5, 'N/A': 6 };
 
-export type HallFilters = Readonly<{ ranking?: 'community' | 'verified'; mode: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' }>;
+export type HallFilters = Readonly<{ ranking?: 'community' | 'verified'; recordType?: 'flight' | 'diagnostic'; mode: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' }>;
 
 export function filterHallOfFame(entries: PublicFlightSummary[], filters: HallFilters): PublicFlightSummary[] {
-  return entries.filter((entry) => (filters.ranking === 'verified' ? entry.verified === true && entry.verificationStatus === 'verified' && entry.legacy !== true : entry.verificationStatus ? (entry.verificationStatus === 'unverified' || entry.verificationStatus === 'verified') : entry.verified === true) && entry.outcome === 'success' && entry.mode === filters.mode && (!filters.scenarioId || entry.scenarioId === filters.scenarioId) && (!filters.difficulty || entry.difficulty === filters.difficulty));
+  return entries.filter((entry) => (filters.recordType ? entry.recordType === filters.recordType : entry.recordType !== 'diagnostic') && (filters.ranking === 'verified' ? entry.verified === true && entry.verificationStatus === 'verified' && entry.legacy !== true : entry.verificationStatus ? (entry.verificationStatus === 'unverified' || entry.verificationStatus === 'verified') : entry.verified === true) && entry.outcome === 'success' && entry.mode === filters.mode && (!filters.scenarioId || entry.scenarioId === filters.scenarioId) && (!filters.difficulty || entry.difficulty === filters.difficulty));
 }
 
 export function sortHallOfFame(entries: PublicFlightSummary[]): PublicFlightSummary[] {

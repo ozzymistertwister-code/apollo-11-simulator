@@ -129,6 +129,7 @@ def _connect() -> sqlite3.Connection:
         "difficulty": "TEXT", "target_distance": "REAL", "terrain_slope": "REAL",
         "module_condition": "TEXT", "initial_fuel": "REAL", "remaining_fuel": "REAL",
         "verification_status": "TEXT NOT NULL DEFAULT 'unverified'", "legacy": "INTEGER NOT NULL DEFAULT 0",
+        "record_type": "TEXT NOT NULL DEFAULT 'flight'", "source": "TEXT", "replay_available": "INTEGER NOT NULL DEFAULT 1",
         "record_json": "TEXT",
     }.items():
         if name not in columns:
@@ -155,7 +156,8 @@ def _public(row: sqlite3.Row) -> dict:
             "terrainSlope": row["terrain_slope"], "moduleCondition": row["module_condition"],
             "initialFuel": row["initial_fuel"], "remainingFuel": row["remaining_fuel"],
             "verified": bool(row["verified"]), "verificationStatus": row["verification_status"],
-            "legacy": bool(row["legacy"])}
+            "legacy": bool(row["legacy"]), "recordType": row["record_type"],
+            "source": row["source"], "replayAvailable": bool(row["replay_available"])}
 
 
 def _validate_record_shape(record: dict, payload: FlightSubmission) -> None:
@@ -225,15 +227,22 @@ def submit_flight(payload: FlightSubmission):
 
 
 @router.get("/leaderboard")
-def leaderboard(include_pending: bool = Query(default=False), ranking: Literal["community", "verified"] = Query(default="community"), mode: Literal["classic", "engineering"] | None = None, scenarioId: str | None = Query(default=None, max_length=64), difficulty: Literal["easy", "normal", "hard"] | None = None):
+def leaderboard(include_pending: bool = Query(default=False), ranking: Literal["community", "verified"] = Query(default="community"), recordType: Literal["flight", "diagnostic"] = Query(default="flight"), mode: Literal["classic", "engineering"] | None = None, scenarioId: str | None = Query(default=None, max_length=64), difficulty: Literal["easy", "normal", "hard"] | None = None):
     connection = _connect()
     try:
         where, params = _ranking_scope(ranking, mode, scenarioId, difficulty)
+        where += " AND record_type = ?"; params.append(recordType)
         order = RANKING_ORDER
         verified = connection.execute(f"SELECT * FROM flights WHERE {where} ORDER BY {order} LIMIT 10", params).fetchall()
-        pending = connection.execute("SELECT * FROM flights WHERE verified = 0 ORDER BY created_at DESC LIMIT 20").fetchall() if include_pending else []
-        pending_count = connection.execute("SELECT COUNT(*) FROM flights WHERE verified = 0").fetchone()[0]
-        return {"ranking": ranking, "entries": [_public(row) for row in verified], "pending": [_public(row) for row in pending], "pendingCount": pending_count}
+        pending = connection.execute(
+            "SELECT * FROM flights WHERE verified = 0 AND record_type = ? ORDER BY created_at DESC LIMIT 20",
+            (recordType,),
+        ).fetchall() if include_pending else []
+        pending_count = connection.execute(
+            "SELECT COUNT(*) FROM flights WHERE verified = 0 AND record_type = ?",
+            (recordType,),
+        ).fetchone()[0]
+        return {"ranking": ranking, "recordType": recordType, "entries": [_public(row) for row in verified], "pending": [_public(row) for row in pending], "pendingCount": pending_count}
     finally:
         connection.close()
 

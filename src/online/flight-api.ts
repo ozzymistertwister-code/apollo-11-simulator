@@ -31,6 +31,9 @@ export type PublicFlightSummary = Readonly<{
   verified?: boolean;
   verificationStatus?: 'unverified' | 'verified' | 'rejected';
   legacy?: boolean;
+  recordType?: 'flight' | 'diagnostic';
+  source?: string | null;
+  replayAvailable?: boolean;
   createdAt?: string;
   flightRecord?: FlightRecord;
 }>;
@@ -82,8 +85,8 @@ export async function submitPublicFlight(record: FlightRecord, identity: PilotId
   return response.json() as Promise<{ id: string; verified: boolean; duplicate?: boolean }>;
 }
 
-export async function fetchLeaderboard(filters: { ranking?: 'community' | 'verified'; mode?: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' } = {}, fetcher: typeof fetch = fetch): Promise<{ ranking?: 'community' | 'verified'; entries: PublicFlightSummary[]; pending: PublicFlightSummary[]; pendingCount?: number }> {
-  const query = new URLSearchParams({ include_pending: 'false', ranking: filters.ranking ?? 'community' });
+export async function fetchLeaderboard(filters: { ranking?: 'community' | 'verified'; recordType?: 'flight' | 'diagnostic'; mode?: 'classic' | 'engineering'; scenarioId?: string; difficulty?: 'easy' | 'normal' | 'hard' } = {}, fetcher: typeof fetch = fetch): Promise<{ ranking?: 'community' | 'verified'; entries: PublicFlightSummary[]; pending: PublicFlightSummary[]; pendingCount?: number }> {
+  const query = new URLSearchParams({ include_pending: 'false', ranking: filters.ranking ?? 'community', recordType: filters.recordType ?? 'flight' });
   if (filters.mode) query.set('mode', filters.mode);
   if (filters.scenarioId) query.set('scenarioId', filters.scenarioId);
   if (filters.difficulty) query.set('difficulty', filters.difficulty);
